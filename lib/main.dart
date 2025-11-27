@@ -1,7 +1,7 @@
-import 'package:exam_schedule/header_section.dart';
-import 'package:exam_schedule/interactive_table.dart';
 import 'package:flutter/material.dart';
-import 'date_sheet_manager.dart';
+import 'managers/date_sheet_manager.dart';
+import 'widgets/header/header_section.dart';
+import 'widgets/table/interactive_table.dart';
 
 void main() {
   runApp(const MyApp());
@@ -43,40 +43,16 @@ class _DateSheetScreenState extends State<DateSheetScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Header Section
             HeaderSection(manager: dateSheetManager),
-
             const SizedBox(height: 24),
-
-            // Interactive Table
             InteractiveTable(manager: dateSheetManager),
-
             const SizedBox(height: 16),
-
-            // Add Row Button
-            TextButton.icon(
+            ElevatedButton.icon(
               onPressed: () {
                 setState(() {
                   dateSheetManager.addNewRow();
                 });
               },
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.blue, // Text and icon color
-                backgroundColor: Colors.blue.withOpacity(
-                  0.1,
-                ), // Background color
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                textStyle: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
               icon: const Icon(Icons.add),
               label: const Text('Add New Row'),
             ),
