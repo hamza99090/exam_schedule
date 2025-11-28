@@ -15,39 +15,96 @@ class HeaderSection extends StatelessWidget {
         child: Column(
           children: [
             TextFormField(
-              initialValue: manager.data.schoolName,
+              controller: TextEditingController(
+                text: manager.data.schoolName.isEmpty
+                    ? ''
+                    : manager.data.schoolName,
+              ),
               onChanged: manager.updateSchoolName,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Colors.blue.shade800,
+                color: manager.data.schoolName.isEmpty
+                    ? Colors.grey
+                    : Colors.blue.shade800,
               ),
               textAlign: TextAlign.center,
-              decoration: const InputDecoration(
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.zero,
+              decoration: InputDecoration(
+                border: const OutlineInputBorder(),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.blue.shade300),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.blue.shade700),
+                ),
+                contentPadding: const EdgeInsets.all(12),
+                hintText: 'Enter Your School Name',
+                hintStyle: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey.shade500,
+                ),
               ),
             ),
             const SizedBox(height: 12),
             TextFormField(
-              initialValue: manager.data.dateSheetDescription,
+              controller: TextEditingController(
+                text: manager.data.dateSheetDescription.isEmpty
+                    ? ''
+                    : manager.data.dateSheetDescription,
+              ),
               onChanged: manager.updateDateSheetDescription,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: manager.data.dateSheetDescription.isEmpty
+                    ? Colors.grey
+                    : Colors.black87,
+              ),
               textAlign: TextAlign.center,
-              decoration: const InputDecoration(
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.zero,
+              decoration: InputDecoration(
+                border: const OutlineInputBorder(),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.blue.shade300),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.blue.shade700),
+                ),
+                contentPadding: const EdgeInsets.all(12),
+                hintText: 'Enter Date Sheet Description',
+                hintStyle: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade500,
+                ),
               ),
             ),
             const SizedBox(height: 8),
             TextFormField(
-              initialValue: manager.data.termDescription,
+              controller: TextEditingController(
+                text: manager.data.termDescription.isEmpty
+                    ? ''
+                    : manager.data.termDescription,
+              ),
               onChanged: manager.updateTermDescription,
-              style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
+              style: TextStyle(
+                fontSize: 14,
+                color: manager.data.termDescription.isEmpty
+                    ? Colors.grey
+                    : Colors.grey.shade700,
+              ),
               textAlign: TextAlign.center,
-              decoration: const InputDecoration(
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.zero,
+              decoration: InputDecoration(
+                border: const OutlineInputBorder(),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.blue.shade300),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.blue.shade700),
+                ),
+                contentPadding: const EdgeInsets.all(12),
+                hintText: 'Enter Examination Term Description',
+                hintStyle: TextStyle(fontSize: 14, color: Colors.grey.shade500),
               ),
             ),
           ],

@@ -1,12 +1,33 @@
 import 'package:flutter/material.dart';
 import '../managers/date_sheet_manager.dart';
 import '../models/date_sheet_model.dart';
-import 'date_sheet_detail_screen.dart'; // Add this import
+import 'date_sheet_detail_screen.dart';
 
-class SavedDateSheetsScreen extends StatelessWidget {
+class SavedDateSheetsScreen extends StatefulWidget {
   final DateSheetManager manager;
 
   const SavedDateSheetsScreen({super.key, required this.manager});
+
+  @override
+  State<SavedDateSheetsScreen> createState() => _SavedDateSheetsScreenState();
+}
+
+class _SavedDateSheetsScreenState extends State<SavedDateSheetsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Listen to manager changes
+    widget.manager.addListener(() {
+      setState(() {}); // Rebuild when manager changes
+    });
+  }
+
+  @override
+  void dispose() {
+    // Remove listener to prevent memory leaks
+    widget.manager.removeListener(() {});
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +37,7 @@ class SavedDateSheetsScreen extends StatelessWidget {
         backgroundColor: Colors.blue.shade700,
         foregroundColor: Colors.white,
       ),
-      body: manager.savedDateSheets.isEmpty
+      body: widget.manager.savedDateSheets.isEmpty
           ? const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -31,9 +52,9 @@ class SavedDateSheetsScreen extends StatelessWidget {
               ),
             )
           : ListView.builder(
-              itemCount: manager.savedDateSheets.length,
+              itemCount: widget.manager.savedDateSheets.length,
               itemBuilder: (context, index) {
-                final dateSheet = manager.savedDateSheets[index];
+                final dateSheet = widget.manager.savedDateSheets[index];
                 return _buildDateSheetCard(context, dateSheet, index);
               },
             ),
@@ -76,11 +97,6 @@ class SavedDateSheetsScreen extends StatelessWidget {
               tooltip: 'View Date Sheet',
             ),
             IconButton(
-              icon: const Icon(Icons.download, color: Colors.green),
-              onPressed: () => _loadDateSheet(context, dateSheet),
-              tooltip: 'Load Date Sheet',
-            ),
-            IconButton(
               icon: const Icon(Icons.delete, color: Colors.red),
               onPressed: () => _deleteDateSheet(context, index),
               tooltip: 'Delete Date Sheet',
@@ -100,45 +116,16 @@ class SavedDateSheetsScreen extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => DateSheetDetailScreen(dateSheet: dateSheet),
-      ),
-    );
-  }
-
-  void _loadDateSheet(BuildContext context, DateSheetData dateSheet) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Load Date Sheet'),
-        content: Text(
-          'Load "${dateSheet.fileName}" to editor? This will replace your current work.',
+        builder: (context) => DateSheetDetailScreen(
+          dateSheet: dateSheet,
+          manager: widget.manager,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              manager.loadDateSheet(dateSheet);
-              Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Go back to main screen
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Loaded "${dateSheet.fileName}" successfully!'),
-                  backgroundColor: Colors.green,
-                ),
-              );
-            },
-            child: const Text('Load'),
-          ),
-        ],
       ),
     );
   }
 
   void _deleteDateSheet(BuildContext context, int index) {
-    final fileName = manager.savedDateSheets[index].fileName;
+    final fileName = widget.manager.savedDateSheets[index].fileName;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -151,12 +138,13 @@ class SavedDateSheetsScreen extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              manager.deleteDateSheet(index);
+              widget.manager.deleteDateSheet(index);
               Navigator.pop(context);
+              // Show confirmation message
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Deleted "$fileName" successfully!'),
-                  backgroundColor: Colors.red,
+                  content: Text('"$fileName" deleted successfully!'),
+                  backgroundColor: Colors.green,
                 ),
               );
             },

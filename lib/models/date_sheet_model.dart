@@ -9,16 +9,15 @@ class DateSheetData {
   DateTime createdAt;
 
   DateSheetData({
-    this.schoolName = 'Enter Your School Name',
-    this.dateSheetDescription = 'Enter Date Sheet Description',
-    this.termDescription = 'Enter Examination Term Description',
+    this.schoolName = '',
+    this.dateSheetDescription = '',
+    this.termDescription = '',
     List<TableRowData>? tableRows,
     this.fileName = '',
     DateTime? createdAt,
   }) : tableRows = tableRows ?? [TableRowData()],
        createdAt = createdAt ?? DateTime.now();
 
-  // Add a copyWith method for easier cloning
   DateSheetData copyWith({
     String? schoolName,
     String? dateSheetDescription,

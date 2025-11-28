@@ -31,6 +31,7 @@ class DateSheetManager extends ChangeNotifier {
 
   void updateDate(int rowIndex, DateTime? date) {
     if (rowIndex < _data.tableRows.length) {
+      print('=== MANAGER: Updating DATE at row $rowIndex to: $date ===');
       _data.tableRows[rowIndex].date = date;
       notifyListeners();
     }
@@ -38,8 +39,14 @@ class DateSheetManager extends ChangeNotifier {
 
   void updateDay(int rowIndex, String? day) {
     if (rowIndex < _data.tableRows.length) {
+      print('=== MANAGER: Updating DAY at row $rowIndex to: $day ===');
       _data.tableRows[rowIndex].day = day;
       notifyListeners();
+
+      // Debug: Verify the update
+      print(
+        '=== VERIFY: Current day in row $rowIndex is now: ${_data.tableRows[rowIndex].day} ===',
+      );
     }
   }
 
@@ -55,6 +62,7 @@ class DateSheetManager extends ChangeNotifier {
   }
 
   // New method to save current date sheet
+  // Update the saveDateSheet method
   void saveDateSheet(String fileName) {
     final savedSheet = _data.copyWith(
       fileName: fileName,
@@ -62,8 +70,15 @@ class DateSheetManager extends ChangeNotifier {
     );
     _savedDateSheets.add(savedSheet);
 
-    // Reset current data to empty state
-    _data = DateSheetData();
+    // Reset current data with EMPTY strings, not placeholder text
+    _data = DateSheetData(
+      schoolName: '', // ← Change to empty
+      dateSheetDescription: '', // ← Change to empty
+      termDescription: '', // ← Change to empty
+      tableRows: [TableRowData()],
+      fileName: '',
+      createdAt: DateTime.now(),
+    );
     notifyListeners();
   }
 
@@ -79,5 +94,11 @@ class DateSheetManager extends ChangeNotifier {
       _savedDateSheets.removeAt(index);
       notifyListeners();
     }
+  }
+
+  // Add this setter
+  set data(DateSheetData newData) {
+    _data = newData;
+    notifyListeners();
   }
 }
