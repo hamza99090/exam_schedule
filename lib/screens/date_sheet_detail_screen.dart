@@ -22,11 +22,44 @@ class DateSheetDetailScreen extends StatefulWidget {
 class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
   late DateSheetData _editableDateSheet;
   bool _isEditing = false;
+  late DateSheetManager _tempManager; // Add this line
 
   @override
   void initState() {
     super.initState();
+
+    print('=== DETAIL SCREEN INIT ===');
+    print('Received classNames: ${widget.dateSheet.classNames}');
+    print(
+      'First 3 classNames: ${widget.dateSheet.classNames.take(3).toList()}',
+    );
+
     _editableDateSheet = widget.dateSheet.copyWith();
+    _initializeTempManager();
+  }
+
+  // ADD THIS METHOD
+  void _initializeTempManager() {
+    print('=== INITIALIZING TEMP MANAGER ===');
+    print('Editable sheet classNames: ${_editableDateSheet.classNames}');
+
+    _tempManager = DateSheetManager();
+    _tempManager.data = _editableDateSheet.copyWith();
+
+    print('Temp manager classNames: ${_tempManager.data.classNames}');
+
+    // Listen to changes from the InteractiveTable
+    _tempManager.addListener(() {
+      print('=== DETAIL: Temp manager notified ===');
+      print('New classNames in tempManager: ${_tempManager.data.classNames}');
+      setState(() {
+        // Update our local copy with changes from the table
+        _editableDateSheet = _tempManager.data.copyWith(
+          fileName: _editableDateSheet.fileName,
+          createdAt: _editableDateSheet.createdAt,
+        );
+      });
+    });
   }
 
   void _toggleEditing() {
@@ -135,11 +168,6 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
               tooltip: 'Edit Date Sheet',
             ),
           if (_isEditing) ...[
-            IconButton(
-              icon: const Icon(Icons.save),
-              onPressed: _saveChanges,
-              tooltip: 'Save Changes',
-            ),
             IconButton(
               icon: const Icon(Icons.cancel),
               onPressed: _discardChanges,

@@ -9,6 +9,9 @@ class DateSheetManager extends ChangeNotifier {
   DateSheetData get data => _data;
   List<DateSheetData> get savedDateSheets => _savedDateSheets;
 
+  // Getter for class names - defaults to I through XII
+  List<String> get classNames => _data.classNames;
+
   void updateSchoolName(String name) {
     _data.schoolName = name;
     notifyListeners();
@@ -61,20 +64,59 @@ class DateSheetManager extends ChangeNotifier {
     }
   }
 
-  // New method to save current date sheet
-  // Update the saveDateSheet method
+  // NEW METHOD: Update class name
+  void updateClassName(int index, String newName) {
+    print('=== UPDATE CLASS NAME CALLED ===');
+    print('Index: $index, New name: "$newName"');
+    print('Current classNames before: ${_data.classNames}');
+
+    if (index >= 0 && index < _data.classNames.length) {
+      final oldClassName = _data.classNames[index];
+
+      // Make sure we're not modifying a const list
+      _data.classNames = List<String>.from(_data.classNames);
+      _data.classNames[index] = newName;
+
+      // Migrate all existing subject data from old class name to new class name
+      for (var row in _data.tableRows) {
+        if (row.classSubjects.containsKey(oldClassName)) {
+          final subjects = row.classSubjects[oldClassName] ?? [];
+          row.classSubjects.remove(oldClassName);
+          row.classSubjects[newName] = subjects;
+        }
+      }
+
+      notifyListeners();
+      print(
+        '=== MANAGER: Updated class name at index $index from "$oldClassName" to "$newName" ===',
+      );
+    }
+  }
+
+  // Update the saveDateSheet method to preserve class names
   void saveDateSheet(String fileName) {
-    final savedSheet = _data.copyWith(
+    print('=== SAVE: Current classNames: ${_data.classNames} ===');
+
+    // Create a DEEP copy with all data including classNames
+    final savedSheet = DateSheetData(
+      schoolName: _data.schoolName,
+      dateSheetDescription: _data.dateSheetDescription,
+      termDescription: _data.termDescription,
+      tableRows: _data.tableRows.map((row) => row.copyWith()).toList(),
       fileName: fileName,
       createdAt: DateTime.now(),
+      classNames: List<String>.from(_data.classNames), // IMPORTANT: Deep copy
     );
+
+    print('=== SAVE: Saving classNames: ${savedSheet.classNames} ===');
+
     _savedDateSheets.add(savedSheet);
 
-    // Reset current data with EMPTY strings, not placeholder text
+    // Reset current data
     _data = DateSheetData(
-      schoolName: '', // ← Change to empty
-      dateSheetDescription: '', // ← Change to empty
-      termDescription: '', // ← Change to empty
+      schoolName: '',
+      dateSheetDescription: '',
+      termDescription: '',
       tableRows: [TableRowData()],
       fileName: '',
       createdAt: DateTime.now(),

@@ -3,7 +3,6 @@ import 'package:exam_schedule/day_selector.dart';
 import 'package:exam_schedule/models/table_row_model.dart';
 import 'package:flutter/material.dart';
 import '../../managers/date_sheet_manager.dart';
-
 import '../cells/subject_multi_selector.dart';
 
 class InteractiveTable extends StatefulWidget {
@@ -21,14 +20,45 @@ class InteractiveTable extends StatefulWidget {
 }
 
 class _InteractiveTableState extends State<InteractiveTable> {
+  final List<TextEditingController> _classControllers = [];
+  final ScrollController _horizontalScrollController =
+      ScrollController(); // Add this
+
   @override
   void initState() {
     super.initState();
+    // Initialize controllers with current class names
+    _initializeControllers();
+
     // Listen to manager changes
     widget.manager.addListener(() {
       print('=== TABLE: Manager notified, rebuilding ===');
+      _initializeControllers(); // Re-initialize controllers if data changes
       setState(() {});
     });
+  }
+
+  @override
+  void dispose() {
+    // Dispose all controllers to prevent memory leaks
+    for (var controller in _classControllers) {
+      controller.dispose();
+    }
+    _horizontalScrollController.dispose(); // Dispose scroll controller
+    super.dispose();
+  }
+
+  void _initializeControllers() {
+    // Clear existing controllers
+    for (var controller in _classControllers) {
+      controller.dispose();
+    }
+    _classControllers.clear();
+
+    // Create new controllers with current class names
+    for (var className in widget.manager.data.classNames) {
+      _classControllers.add(TextEditingController(text: className));
+    }
   }
 
   @override
@@ -42,12 +72,14 @@ class _InteractiveTableState extends State<InteractiveTable> {
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Container(
-          padding: const EdgeInsets.only(top: 8.0), // Add top padding here
+          padding: const EdgeInsets.only(top: 8.0),
           child: Scrollbar(
+            controller: _horizontalScrollController, // Add this
             thumbVisibility: true,
             trackVisibility: true,
             interactive: true,
             child: SingleChildScrollView(
+              controller: _horizontalScrollController, // Add this
               scrollDirection: Axis.horizontal,
               child: DataTable(
                 headingTextStyle: const TextStyle(
@@ -59,21 +91,18 @@ class _InteractiveTableState extends State<InteractiveTable> {
                   Colors.blue.shade700,
                 ),
                 dataTextStyle: const TextStyle(fontSize: 11),
-                columns: const [
-                  DataColumn(label: Text('DATE')),
-                  DataColumn(label: Text('DAY')),
-                  DataColumn(label: Text('I')),
-                  DataColumn(label: Text('II')),
-                  DataColumn(label: Text('III')),
-                  DataColumn(label: Text('IV')),
-                  DataColumn(label: Text('V')),
-                  DataColumn(label: Text('VI')),
-                  DataColumn(label: Text('VII')),
-                  DataColumn(label: Text('VIII')),
-                  DataColumn(label: Text('IX')),
-                  DataColumn(label: Text('X')),
-                  DataColumn(label: Text('XI')),
-                  DataColumn(label: Text('XII')),
+                columns: [
+                  const DataColumn(label: Text('DATE')),
+                  const DataColumn(label: Text('DAY')),
+                  ...widget.manager.data.classNames.asMap().entries.map((
+                    entry,
+                  ) {
+                    final index = entry.key;
+                    final className = entry.value;
+                    return DataColumn(
+                      label: _buildClassNameEditor(index, className),
+                    );
+                  }).toList(),
                 ],
                 rows: widget.manager.data.tableRows.asMap().entries.map((
                   entry,
@@ -92,6 +121,41 @@ class _InteractiveTableState extends State<InteractiveTable> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildClassNameEditor(int index, String currentName) {
+    print('=== BUILD CLASS EDITOR: index=$index, name="$currentName" ===');
+
+    return Container(
+      width: 100,
+      child: TextFormField(
+        controller: _classControllers[index],
+        enabled: widget.isEditing,
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+          fontSize: 12,
+        ),
+        textAlign: TextAlign.center,
+        decoration: InputDecoration(
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 8,
+            horizontal: 4,
+          ),
+          hintText: 'Class...',
+          hintStyle: const TextStyle(color: Colors.white70),
+          // filled: true,
+          // fillColor: currentName.isEmpty
+          //     ? Colors.red.shade100
+          //     : Colors.transparent, // Visual debug
+        ),
+        onChanged: (value) {
+          print('=== CLASS NAME CHANGED: $value ===');
+          widget.manager.updateClassName(index, value);
+        },
       ),
     );
   }
@@ -121,41 +185,28 @@ class _InteractiveTableState extends State<InteractiveTable> {
           print('=== TABLE: Day selected manually: $day ===');
           widget.manager.updateDay(index, day);
         },
-        enabled: false, // Add this to disable the dropdown
+        enabled: false,
       ),
     );
   }
 
   List<DataCell> _buildClassCells(int index, TableRowData rowData) {
-    return [
-          'I',
-          'II',
-          'III',
-          'IV',
-          'V',
-          'VI',
-          'VII',
-          'VIII',
-          'IX',
-          'X',
-          'XI',
-          'XII',
-        ]
-        .map(
-          (classNum) => DataCell(
-            SizedBox(
-              width: 100,
-              child: SubjectMultiSelector(
-                classNumber: classNum,
-                selectedSubjects: rowData.classSubjects[classNum] ?? [],
-                onSubjectsChanged: (subjects) {
-                  widget.manager.updateClassSubjects(index, classNum, subjects);
-                },
-                enabled: widget.isEditing, // Add this line
-              ),
-            ),
+    return widget.manager.data.classNames.asMap().entries.map((entry) {
+      final classIndex = entry.key;
+      final classNum = entry.value;
+      return DataCell(
+        SizedBox(
+          width: 100,
+          child: SubjectMultiSelector(
+            classNumber: classNum,
+            selectedSubjects: rowData.classSubjects[classNum] ?? [],
+            onSubjectsChanged: (subjects) {
+              widget.manager.updateClassSubjects(index, classNum, subjects);
+            },
+            enabled: widget.isEditing,
           ),
-        )
-        .toList();
+        ),
+      );
+    }).toList();
   }
 }

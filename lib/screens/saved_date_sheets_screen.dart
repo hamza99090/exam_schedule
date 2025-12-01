@@ -113,6 +113,13 @@ class _SavedDateSheetsScreenState extends State<SavedDateSheetsScreen> {
   }
 
   void _viewDateSheet(BuildContext context, DateSheetData dateSheet) {
+    print('=== VIEWING SAVED SHEET ===');
+    print('File: ${dateSheet.fileName}');
+    print('Class names in saved sheet: ${dateSheet.classNames}');
+    print(
+      'Are they default? ${dateSheet.classNames == DateSheetData.defaultClassNames}',
+    );
+
     Navigator.push(
       context,
       MaterialPageRoute(
