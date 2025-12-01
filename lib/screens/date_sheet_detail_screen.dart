@@ -123,9 +123,8 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
   }
 
   void _addNewRow() {
-    setState(() {
-      _editableDateSheet.tableRows.add(TableRowData());
-    });
+    // Use tempManager instead of directly manipulating data
+    _tempManager.addNewRow();
   }
 
   String _formatDate(DateTime date) {
@@ -209,9 +208,13 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
             _isEditing
                 ? TextFormField(
                     initialValue: _editableDateSheet.schoolName,
+                    // In each TextFormField in _buildHeaderCard(), add:
                     onChanged: (value) {
                       setState(() {
                         _editableDateSheet.schoolName = value;
+                        _tempManager.updateSchoolName(
+                          value,
+                        ); // ← Sync with temp manager
                       });
                     },
                     style: TextStyle(
@@ -239,9 +242,13 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
             _isEditing
                 ? TextFormField(
                     initialValue: _editableDateSheet.dateSheetDescription,
+                    // In each TextFormField in _buildHeaderCard(), add:
                     onChanged: (value) {
                       setState(() {
-                        _editableDateSheet.dateSheetDescription = value;
+                        _editableDateSheet.schoolName = value;
+                        _tempManager.updateSchoolName(
+                          value,
+                        ); // ← Sync with temp manager
                       });
                     },
                     style: const TextStyle(
@@ -267,9 +274,13 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
             _isEditing
                 ? TextFormField(
                     initialValue: _editableDateSheet.termDescription,
+                    // In each TextFormField in _buildHeaderCard(), add:
                     onChanged: (value) {
                       setState(() {
-                        _editableDateSheet.termDescription = value;
+                        _editableDateSheet.schoolName = value;
+                        _tempManager.updateSchoolName(
+                          value,
+                        ); // ← Sync with temp manager
                       });
                     },
                     style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
@@ -300,13 +311,10 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
   }
 
   Widget _buildDateSheetTable() {
-    // Create a temporary manager for the table
-    final tempManager = DateSheetManager();
-    tempManager.data = _editableDateSheet;
-
+    // Use the persistent temp manager, not create a new one
     return InteractiveTable(
-      manager: tempManager,
-      isEditing: _isEditing, // This is the key line!
+      manager: _tempManager, // ← Use _tempManager, not create new
+      isEditing: _isEditing,
     );
   }
 

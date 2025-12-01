@@ -21,102 +21,122 @@ class InteractiveTable extends StatefulWidget {
 
 class _InteractiveTableState extends State<InteractiveTable> {
   final List<TextEditingController> _classControllers = [];
-  final ScrollController _horizontalScrollController =
-      ScrollController(); // Add this
+  final ScrollController _horizontalScrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    // Initialize controllers with current class names
-    _initializeControllers();
+    // Create controllers once for initial data
+    for (var className in widget.manager.data.classNames) {
+      _classControllers.add(TextEditingController(text: className));
+    }
 
-    // Listen to manager changes
-    widget.manager.addListener(() {
-      print('=== TABLE: Manager notified, rebuilding ===');
-      _initializeControllers(); // Re-initialize controllers if data changes
-      setState(() {});
-    });
+    // Listen to manager changes but DON'T recreate controllers every time.
+    widget.manager.addListener(_onManagerChanged);
+  }
+
+  void _onManagerChanged() {
+    // Sync controller texts with manager data *in-place*
+    final classNames = widget.manager.data.classNames;
+
+    // If there are more names than controllers, add new controllers
+    if (classNames.length > _classControllers.length) {
+      for (var i = _classControllers.length; i < classNames.length; i++) {
+        _classControllers.add(TextEditingController(text: classNames[i]));
+      }
+    }
+
+    // If there are fewer names than controllers, dispose extras
+    if (classNames.length < _classControllers.length) {
+      for (var i = _classControllers.length - 1; i >= classNames.length; i--) {
+        _classControllers[i].dispose();
+        _classControllers.removeAt(i);
+      }
+    }
+
+    // Update existing controller texts (preserve cursor/selection when possible)
+    for (
+      var i = 0;
+      i < classNames.length && i < _classControllers.length;
+      i++
+    ) {
+      final ctrl = _classControllers[i];
+      final newText = classNames[i];
+      if (ctrl.text != newText) {
+        // preserve selection as a best-effort (if selection index is valid)
+        final oldSelection = ctrl.selection;
+        ctrl.text = newText;
+        final newOffset = oldSelection.baseOffset.clamp(0, ctrl.text.length);
+        ctrl.selection = TextSelection.collapsed(offset: newOffset);
+      }
+    }
+
+    // rebuild UI
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
-    // Dispose all controllers to prevent memory leaks
+    widget.manager.removeListener(_onManagerChanged);
     for (var controller in _classControllers) {
       controller.dispose();
     }
-    _horizontalScrollController.dispose(); // Dispose scroll controller
+    _horizontalScrollController.dispose();
     super.dispose();
-  }
-
-  void _initializeControllers() {
-    // Clear existing controllers
-    for (var controller in _classControllers) {
-      controller.dispose();
-    }
-    _classControllers.clear();
-
-    // Create new controllers with current class names
-    for (var className in widget.manager.data.classNames) {
-      _classControllers.add(TextEditingController(text: className));
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    print(
-      '=== TABLE: Building with ${widget.manager.data.tableRows.length} rows ===',
-    );
-
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
+    // If your whole table must be LTR regardless of app locale, wrap it once:
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: Card(
+        elevation: 4,
         child: Container(
-          padding: const EdgeInsets.only(top: 8.0),
-          child: Scrollbar(
-            controller: _horizontalScrollController, // Add this
-            thumbVisibility: true,
-            trackVisibility: true,
-            interactive: true,
-            child: SingleChildScrollView(
-              controller: _horizontalScrollController, // Add this
-              scrollDirection: Axis.horizontal,
-              child: DataTable(
-                headingTextStyle: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  fontSize: 12,
-                ),
-                headingRowColor: MaterialStateProperty.all(
-                  Colors.blue.shade700,
-                ),
-                dataTextStyle: const TextStyle(fontSize: 11),
-                columns: [
-                  const DataColumn(label: Text('DATE')),
-                  const DataColumn(label: Text('DAY')),
-                  ...widget.manager.data.classNames.asMap().entries.map((
-                    entry,
-                  ) {
-                    final index = entry.key;
-                    final className = entry.value;
-                    return DataColumn(
-                      label: _buildClassNameEditor(index, className),
+          height: 200, // Increased height (you can adjust this value)
+          padding: const EdgeInsets.all(16.0),
+          child: Container(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: Scrollbar(
+              controller: _horizontalScrollController,
+              thumbVisibility: true,
+              trackVisibility: true,
+              interactive: true,
+              child: SingleChildScrollView(
+                controller: _horizontalScrollController,
+                scrollDirection: Axis.horizontal,
+                child: DataTable(
+                  headingTextStyle: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontSize: 12,
+                  ),
+                  headingRowColor: MaterialStateProperty.all(
+                    Colors.blue.shade700,
+                  ),
+                  dataTextStyle: const TextStyle(fontSize: 11),
+                  columns: [
+                    const DataColumn(label: Text('DATE')),
+                    const DataColumn(label: Text('DAY')),
+                    ...widget.manager.data.classNames.asMap().entries.map((e) {
+                      final index = e.key;
+                      return DataColumn(
+                        label: _buildClassNameEditor(index, e.value),
+                      );
+                    }).toList(),
+                  ],
+                  rows: widget.manager.data.tableRows.asMap().entries.map((e) {
+                    final index = e.key;
+                    final rowData = e.value;
+                    return DataRow(
+                      cells: [
+                        _buildDateCell(index, rowData),
+                        _buildDayCell(index, rowData),
+                        ..._buildClassCells(index, rowData),
+                      ],
                     );
                   }).toList(),
-                ],
-                rows: widget.manager.data.tableRows.asMap().entries.map((
-                  entry,
-                ) {
-                  final index = entry.key;
-                  final rowData = entry.value;
-                  return DataRow(
-                    cells: [
-                      _buildDateCell(index, rowData),
-                      _buildDayCell(index, rowData),
-                      ..._buildClassCells(index, rowData),
-                    ],
-                  );
-                }).toList(),
+                ),
               ),
             ),
           ),
@@ -126,7 +146,10 @@ class _InteractiveTableState extends State<InteractiveTable> {
   }
 
   Widget _buildClassNameEditor(int index, String currentName) {
-    print('=== BUILD CLASS EDITOR: index=$index, name="$currentName" ===');
+    // defensive: ensure controller exists
+    if (index >= _classControllers.length) {
+      _classControllers.add(TextEditingController(text: currentName));
+    }
 
     return Container(
       width: 100,
@@ -139,6 +162,7 @@ class _InteractiveTableState extends State<InteractiveTable> {
           fontSize: 12,
         ),
         textAlign: TextAlign.center,
+        autofocus: false,
         decoration: InputDecoration(
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(
@@ -147,13 +171,10 @@ class _InteractiveTableState extends State<InteractiveTable> {
           ),
           hintText: 'Class...',
           hintStyle: const TextStyle(color: Colors.white70),
-          // filled: true,
-          // fillColor: currentName.isEmpty
-          //     ? Colors.red.shade100
-          //     : Colors.transparent, // Visual debug
         ),
         onChanged: (value) {
-          print('=== CLASS NAME CHANGED: $value ===');
+          // only update manager (which will trigger _onManagerChanged) —
+          // manager should update the underlying data without forcing controllers recreation.
           widget.manager.updateClassName(index, value);
         },
       ),
