@@ -22,13 +22,14 @@ class HeaderSection extends StatelessWidget {
               ),
               onChanged: manager.updateSchoolName,
               style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+                fontSize: 14, // Changed to match third TextFormField
                 color: manager.data.schoolName.isEmpty
                     ? Colors.grey
-                    : Colors.blue.shade800,
+                    : Colors
+                          .grey
+                          .shade500, // Changed to match third TextFormField
               ),
-              textAlign: TextAlign.center,
+              // textAlign: TextAlign.center,
               decoration: InputDecoration(
                 border: const OutlineInputBorder(),
                 enabledBorder: OutlineInputBorder(
@@ -39,11 +40,7 @@ class HeaderSection extends StatelessWidget {
                 ),
                 contentPadding: const EdgeInsets.all(12),
                 hintText: 'Enter Your School Name',
-                hintStyle: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade500,
-                ),
+                hintStyle: TextStyle(fontSize: 14, color: Colors.grey.shade500),
               ),
             ),
             const SizedBox(height: 12),
@@ -55,13 +52,14 @@ class HeaderSection extends StatelessWidget {
               ),
               onChanged: manager.updateDateSheetDescription,
               style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+                fontSize: 14, // Changed to match third TextFormField
                 color: manager.data.dateSheetDescription.isEmpty
                     ? Colors.grey
-                    : Colors.black87,
+                    : Colors
+                          .grey
+                          .shade500, // Changed to match third TextFormField
               ),
-              textAlign: TextAlign.center,
+              // textAlign: TextAlign.center,
               decoration: InputDecoration(
                 border: const OutlineInputBorder(),
                 enabledBorder: OutlineInputBorder(
@@ -72,11 +70,7 @@ class HeaderSection extends StatelessWidget {
                 ),
                 contentPadding: const EdgeInsets.all(12),
                 hintText: 'Enter Date Sheet Description',
-                hintStyle: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey.shade500,
-                ),
+                hintStyle: TextStyle(fontSize: 14, color: Colors.grey.shade500),
               ),
             ),
             const SizedBox(height: 8),
@@ -91,9 +85,9 @@ class HeaderSection extends StatelessWidget {
                 fontSize: 14,
                 color: manager.data.termDescription.isEmpty
                     ? Colors.grey
-                    : Colors.grey.shade700,
+                    : Colors.grey.shade500,
               ),
-              textAlign: TextAlign.center,
+              // textAlign: TextAlign.center,
               decoration: InputDecoration(
                 border: const OutlineInputBorder(),
                 enabledBorder: OutlineInputBorder(
