@@ -1,6 +1,6 @@
 class ClassSubjectsData {
   static final Map<String, List<String>> subjectsByClass = {
-    'I': [
+    'Class I': [
       'English',
       'Mathematics',
       'EVS',
@@ -9,7 +9,7 @@ class ClassSubjectsData {
       'Drawing',
       'Computer',
     ],
-    'II': [
+    'Class II': [
       'English',
       'Mathematics',
       'EVS',
@@ -18,7 +18,7 @@ class ClassSubjectsData {
       'Drawing',
       'Computer',
     ],
-    'III': [
+    'Class III': [
       'English',
       'Mathematics',
       'EVS',
@@ -27,7 +27,7 @@ class ClassSubjectsData {
       'Drawing',
       'Computer',
     ],
-    'IV': [
+    'Class IV': [
       'English',
       'Mathematics',
       'Science',
@@ -36,7 +36,7 @@ class ClassSubjectsData {
       'Punjabi',
       'Computer',
     ],
-    'V': [
+    'Class V': [
       'English',
       'Mathematics',
       'Science',
@@ -45,7 +45,7 @@ class ClassSubjectsData {
       'Punjabi',
       'Computer',
     ],
-    'VI': [
+    'Class VI': [
       'Science',
       'Mathematics',
       'English',
@@ -54,7 +54,7 @@ class ClassSubjectsData {
       'Punjabi',
       'Hindi',
     ],
-    'VII': [
+    'Class VII': [
       'Science',
       'Mathematics',
       'English',
@@ -63,7 +63,7 @@ class ClassSubjectsData {
       'Punjabi',
       'Hindi',
     ],
-    'VIII': [
+    'Class VIII': [
       'Science',
       'Mathematics',
       'English',
@@ -72,7 +72,7 @@ class ClassSubjectsData {
       'Punjabi',
       'Hindi',
     ],
-    'IX': [
+    'Class IX': [
       'Mathematics',
       'English',
       'Science',
@@ -81,7 +81,7 @@ class ClassSubjectsData {
       'Additional Punjabi',
       'A.I.',
     ],
-    'X': [
+    'Class X': [
       'Mathematics',
       'English',
       'Science',
@@ -90,7 +90,7 @@ class ClassSubjectsData {
       'Punjabi/Computer Application',
       'Additional Punjabi/LT.',
     ],
-    'XI': [
+    'Class XI': [
       'Economics',
       'Chemistry',
       'Physics',
@@ -105,7 +105,7 @@ class ClassSubjectsData {
       'Political Science',
       'Psychology',
     ],
-    'XII': [
+    'Class XII': [
       'Physics',
       'History',
       'Accountancy',

@@ -40,18 +40,18 @@ class DateSheetData {
 
   // Default class names
   static const List<String> defaultClassNames = [
-    'I',
-    'II',
-    'III',
-    'IV',
-    'V',
-    'VI',
-    'VII',
-    'VIII',
-    'IX',
-    'X',
-    'XI',
-    'XII',
+    'Class I',
+    'Class II',
+    'Class III',
+    'Class IV',
+    'Class V',
+    'Class VI',
+    'Class VII',
+    'Class VIII',
+    'Class IX',
+    'Class X',
+    'Class XI',
+    'Class XII',
   ];
 
   DateSheetData copyWith({

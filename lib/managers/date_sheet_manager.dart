@@ -28,13 +28,27 @@ class DateSheetManager extends ChangeNotifier {
 
   // Default subjects for standard classes
   static final Map<String, List<String>> _defaultClassSubjects = {
-    'I': ['English', 'Math', 'Urdu', 'Science', 'Drawing'],
-    'II': ['English', 'Math', 'Urdu', 'Science', 'Drawing'],
-    'III': ['English', 'Math', 'Urdu', 'Science', 'Social Studies'],
-    'IV': ['English', 'Math', 'Urdu', 'Science', 'Social Studies'],
-    'V': ['English', 'Math', 'Urdu', 'Science', 'Social Studies', 'Islamiyat'],
-    'VI': ['English', 'Math', 'Urdu', 'Science', 'Social Studies', 'Islamiyat'],
-    'VII': [
+    'Class I': ['English', 'Math', 'Urdu', 'Science', 'Drawing'],
+    'Class II': ['English', 'Math', 'Urdu', 'Science', 'Drawing'],
+    'Class III': ['English', 'Math', 'Urdu', 'Science', 'Social Studies'],
+    'Class IV': ['English', 'Math', 'Urdu', 'Science', 'Social Studies'],
+    'Class V': [
+      'English',
+      'Math',
+      'Urdu',
+      'Science',
+      'Social Studies',
+      'Islamiyat',
+    ],
+    'Class VI': [
+      'English',
+      'Math',
+      'Urdu',
+      'Science',
+      'Social Studies',
+      'Islamiyat',
+    ],
+    'Class VII': [
       'English',
       'Math',
       'Urdu',
@@ -43,7 +57,7 @@ class DateSheetManager extends ChangeNotifier {
       'Islamiyat',
       'Computer',
     ],
-    'VIII': [
+    'Class VIII': [
       'English',
       'Math',
       'Urdu',
@@ -52,7 +66,7 @@ class DateSheetManager extends ChangeNotifier {
       'Islamiyat',
       'Computer',
     ],
-    'IX': [
+    'Class IX': [
       'English',
       'Math',
       'Urdu',
@@ -62,7 +76,7 @@ class DateSheetManager extends ChangeNotifier {
       'Computer',
       'Islamiyat',
     ],
-    'X': [
+    'Class X': [
       'English',
       'Math',
       'Urdu',
@@ -72,8 +86,22 @@ class DateSheetManager extends ChangeNotifier {
       'Computer',
       'Islamiyat',
     ],
-    'XI': ['English', 'Math', 'Physics', 'Chemistry', 'Biology', 'Computer'],
-    'XII': ['English', 'Math', 'Physics', 'Chemistry', 'Biology', 'Computer'],
+    'Class XI': [
+      'English',
+      'Math',
+      'Physics',
+      'Chemistry',
+      'Biology',
+      'Computer',
+    ],
+    'Class XII': [
+      'English',
+      'Math',
+      'Physics',
+      'Chemistry',
+      'Biology',
+      'Computer',
+    ],
   };
 
   // Get subjects for a class
