@@ -3,6 +3,7 @@ import '../../data/class_subjects_data.dart';
 
 class SubjectMultiSelector extends StatefulWidget {
   final String classNumber;
+  final List<String> availableSubjects; // NEW PARAMETER
   final List<String> selectedSubjects;
   final Function(List<String>) onSubjectsChanged;
   final bool enabled; // Add this parameter
@@ -10,6 +11,7 @@ class SubjectMultiSelector extends StatefulWidget {
   const SubjectMultiSelector({
     super.key,
     required this.classNumber,
+    required this.availableSubjects, // ADD THIS
     required this.selectedSubjects,
     required this.onSubjectsChanged,
     this.enabled = true, // Default to enabled
@@ -31,20 +33,30 @@ class _SubjectMultiSelectorState extends State<SubjectMultiSelector> {
     _selectedSubjects = List.from(widget.selectedSubjects);
 
     // Extract custom subjects from selected subjects
-    final availableSubjects = ClassSubjectsData.getSubjectsForClass(
-      widget.classNumber,
-    );
+    // final availableSubjects = ClassSubjectsData.getSubjectsForClass(
+    //   widget.classNumber,
+    // );
+
+    //   _customSubjects = _selectedSubjects
+    //       .where(
+    //         (subject) => subject != '—' && !availableSubjects.contains(subject),
+    //       )
+    //       .toList();
+    // }
     _customSubjects = _selectedSubjects
         .where(
-          (subject) => subject != '—' && !availableSubjects.contains(subject),
+          (subject) =>
+              subject != '—' && !widget.availableSubjects.contains(subject),
         )
         .toList();
   }
 
   void _showSubjectSelectionDialog() {
-    final availableSubjects = ClassSubjectsData.getSubjectsForClass(
-      widget.classNumber,
-    );
+    // final availableSubjects = ClassSubjectsData.getSubjectsForClass(
+    //   widget.classNumber,
+    // );
+    final availableSubjects =
+        widget.availableSubjects; // Use passed availableSubjects
 
     showDialog(
       context: context,

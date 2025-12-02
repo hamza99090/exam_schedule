@@ -220,6 +220,9 @@ class _InteractiveTableState extends State<InteractiveTable> {
           width: 100,
           child: SubjectMultiSelector(
             classNumber: classNum,
+            availableSubjects: widget.manager.getSubjectsForClass(
+              classNum,
+            ), // ADD THIS LINE
             selectedSubjects: rowData.classSubjects[classNum] ?? [],
             onSubjectsChanged: (subjects) {
               widget.manager.updateClassSubjects(index, classNum, subjects);

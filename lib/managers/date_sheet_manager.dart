@@ -12,6 +12,67 @@ class DateSheetManager extends ChangeNotifier {
   // Getter for class names - defaults to I through XII
   List<String> get classNames => _data.classNames;
 
+  // Default subjects for standard classes
+  static final Map<String, List<String>> _defaultClassSubjects = {
+    'I': ['English', 'Math', 'Urdu', 'Science', 'Drawing'],
+    'II': ['English', 'Math', 'Urdu', 'Science', 'Drawing'],
+    'III': ['English', 'Math', 'Urdu', 'Science', 'Social Studies'],
+    'IV': ['English', 'Math', 'Urdu', 'Science', 'Social Studies'],
+    'V': ['English', 'Math', 'Urdu', 'Science', 'Social Studies', 'Islamiyat'],
+    'VI': ['English', 'Math', 'Urdu', 'Science', 'Social Studies', 'Islamiyat'],
+    'VII': [
+      'English',
+      'Math',
+      'Urdu',
+      'Science',
+      'Social Studies',
+      'Islamiyat',
+      'Computer',
+    ],
+    'VIII': [
+      'English',
+      'Math',
+      'Urdu',
+      'Science',
+      'Social Studies',
+      'Islamiyat',
+      'Computer',
+    ],
+    'IX': [
+      'English',
+      'Math',
+      'Urdu',
+      'Physics',
+      'Chemistry',
+      'Biology',
+      'Computer',
+      'Islamiyat',
+    ],
+    'X': [
+      'English',
+      'Math',
+      'Urdu',
+      'Physics',
+      'Chemistry',
+      'Biology',
+      'Computer',
+      'Islamiyat',
+    ],
+    'XI': ['English', 'Math', 'Physics', 'Chemistry', 'Biology', 'Computer'],
+    'XII': ['English', 'Math', 'Physics', 'Chemistry', 'Biology', 'Computer'],
+  };
+
+  // Get subjects for a class - use defaults for standard classes, generic for custom
+  List<String> getSubjectsForClass(String className) {
+    // If it's a standard class, return default subjects
+    if (_defaultClassSubjects.containsKey(className)) {
+      return List<String>.from(_defaultClassSubjects[className]!);
+    }
+
+    // For custom class names, return default generic subjects
+    return ['English', 'Math', 'Science', 'Social Studies', 'Urdu'];
+  }
+
   void updateSchoolName(String name) {
     _data.schoolName = name;
     notifyListeners();
@@ -28,7 +89,7 @@ class DateSheetManager extends ChangeNotifier {
   }
 
   void addNewRow() {
-    _data.tableRows.add(TableRowData());
+    _data.tableRows.add(TableRowData(classNames: _data.classNames));
     notifyListeners();
   }
 
@@ -64,7 +125,7 @@ class DateSheetManager extends ChangeNotifier {
     }
   }
 
-  // NEW METHOD: Update class name
+  // Updated METHOD: Update class name with better subject handling
   void updateClassName(int index, String newName) {
     print('=== UPDATE CLASS NAME CALLED ===');
     print('Index: $index, New name: "$newName"');
@@ -83,6 +144,10 @@ class DateSheetManager extends ChangeNotifier {
           final subjects = row.classSubjects[oldClassName] ?? [];
           row.classSubjects.remove(oldClassName);
           row.classSubjects[newName] = subjects;
+        } else {
+          // Initialize with empty list if this class has no subjects yet
+          // Or initialize with default subjects for this class
+          row.classSubjects[newName] = [];
         }
       }
 
@@ -112,7 +177,7 @@ class DateSheetManager extends ChangeNotifier {
 
     _savedDateSheets.add(savedSheet);
 
-    // Reset current data
+    // Reset current data - preserve default class names
     _data = DateSheetData(
       schoolName: '',
       dateSheetDescription: '',
