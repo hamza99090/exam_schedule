@@ -116,72 +116,79 @@ class _InteractiveTableState extends State<InteractiveTable> {
           controller: _horizontalScrollController,
           thumbVisibility: true,
           interactive: true,
-          child: SingleChildScrollView(
-            controller: _horizontalScrollController,
-            scrollDirection: Axis.horizontal,
-            child: DataTable(
-              headingTextStyle: const TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                fontSize: 12,
-              ),
-              headingRowColor: MaterialStateProperty.all(Colors.blue.shade700),
-              dataTextStyle: const TextStyle(fontSize: 11),
-              columnSpacing: 8, // Reduced from default (56.0) to 8
-              dataRowMinHeight: 40, // Reduced row height
-              dataRowMaxHeight: 50,
-              columns: [
-                const DataColumn(label: Text('DATE')),
-                const DataColumn(label: Text('DAY')),
-                ...widget.manager.data.classNames.asMap().entries.map((e) {
-                  final index = e.key;
-                  return DataColumn(
-                    label: _buildClassNameEditor(index, e.value),
-                  );
-                }).toList(),
-                // Add Actions column for delete buttons
-                if (widget.isEditing)
-                  const DataColumn(
-                    label: Text(
-                      'ACTION',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-              ],
-              rows: widget.manager.data.tableRows.asMap().entries.map((e) {
-                final index = e.key;
-                final rowData = e.value;
-                return DataRow(
-                  cells: [
-                    _buildDateCell(index, rowData),
-                    _buildDayCell(index, rowData),
-                    ..._buildClassCells(index, rowData),
-                    // Delete button cell - only show in edit mode
-                    if (widget.isEditing)
-                      DataCell(
-                        Container(
-                          width: 40,
-                          child: IconButton(
-                            icon: Icon(
-                              Icons.delete_outline,
-                              color: Colors.red.shade600,
-                              size: 18,
-                            ),
-                            onPressed: () {
-                              _showDeleteConfirmation(index);
-                            },
-                            padding: EdgeInsets.zero,
-                            tooltip: 'Delete row',
-                          ),
+          child: Container(
+            margin: const EdgeInsets.only(
+              bottom: 10.0,
+            ), // ← Space between table and scrollbar
+            child: SingleChildScrollView(
+              controller: _horizontalScrollController,
+              scrollDirection: Axis.horizontal,
+              child: DataTable(
+                headingTextStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  fontSize: 12,
+                ),
+                headingRowColor: MaterialStateProperty.all(
+                  Colors.blue.shade700,
+                ),
+                dataTextStyle: const TextStyle(fontSize: 11),
+                columnSpacing: 8, // Reduced from default (56.0) to 8
+                dataRowMinHeight: 40, // Reduced row height
+                dataRowMaxHeight: 50,
+                columns: [
+                  const DataColumn(label: Text('DATE')),
+                  const DataColumn(label: Text('DAY')),
+                  ...widget.manager.data.classNames.asMap().entries.map((e) {
+                    final index = e.key;
+                    return DataColumn(
+                      label: _buildClassNameEditor(index, e.value),
+                    );
+                  }).toList(),
+                  // Add Actions column for delete buttons
+                  if (widget.isEditing)
+                    const DataColumn(
+                      label: Text(
+                        'ACTION',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          fontSize: 12,
                         ),
                       ),
-                  ],
-                );
-              }).toList(),
+                    ),
+                ],
+                rows: widget.manager.data.tableRows.asMap().entries.map((e) {
+                  final index = e.key;
+                  final rowData = e.value;
+                  return DataRow(
+                    cells: [
+                      _buildDateCell(index, rowData),
+                      _buildDayCell(index, rowData),
+                      ..._buildClassCells(index, rowData),
+                      // Delete button cell - only show in edit mode
+                      if (widget.isEditing)
+                        DataCell(
+                          Container(
+                            width: 40,
+                            child: IconButton(
+                              icon: Icon(
+                                Icons.delete_outline,
+                                color: Colors.red.shade600,
+                                size: 18,
+                              ),
+                              onPressed: () {
+                                _showDeleteConfirmation(index);
+                              },
+                              padding: EdgeInsets.zero,
+                              tooltip: 'Delete row',
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                }).toList(),
+              ),
             ),
           ),
         ),
