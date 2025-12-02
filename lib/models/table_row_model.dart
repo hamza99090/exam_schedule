@@ -1,25 +1,32 @@
+import 'package:hive/hive.dart';
 import 'package:exam_schedule/models/date_sheet_model.dart';
 
+part 'table_row_model.g.dart'; // Generated file
+
+@HiveType(typeId: 1)
 class TableRowData {
+  @HiveField(0)
   DateTime? date;
+
+  @HiveField(1)
   String? day;
+
+  @HiveField(2)
   Map<String, List<String>> classSubjects;
 
   TableRowData({
     this.date,
     this.day,
     Map<String, List<String>>? classSubjects,
-    List<String>? classNames, // NEW: Accept class names to initialize
+    List<String>? classNames,
   }) : classSubjects =
            classSubjects ??
            {
-             // Initialize with empty lists for default class names
              for (var className
                  in (classNames ?? DateSheetData.defaultClassNames))
                className: [],
            };
 
-  // Add copyWith method for TableRowData
   TableRowData copyWith({
     DateTime? date,
     String? day,
@@ -32,7 +39,6 @@ class TableRowData {
     );
   }
 
-  // Optional: Add toMap and fromMap methods for serialization
   Map<String, dynamic> toMap() {
     return {
       'date': date?.toIso8601String(),

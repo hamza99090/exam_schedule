@@ -401,6 +401,7 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
   }
 
   pw.Widget _buildPDFTable() {
+    // Create headers - starting with S.No, Date, Day
     final headers = ['S.No', 'Date', 'Day', ..._editableDateSheet.classNames];
 
     final rows = _editableDateSheet.tableRows.asMap().entries.map((entry) {
@@ -434,25 +435,37 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
       return rowData;
     }).toList();
 
+    // Remove empty rows (where all cells are empty)
+    rows.removeWhere((row) {
+      // Skip S.No column (index 0) when checking
+      return row.skip(1).every((cell) => cell.isEmpty);
+    });
+
     return pw.Table.fromTextArray(
       headers: headers,
       data: rows,
-      border: pw.TableBorder.all(),
-      headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12),
-      cellStyle: const pw.TextStyle(fontSize: 10),
+      border: pw.TableBorder.all(width: 0.5),
+      headerStyle: pw.TextStyle(
+        fontWeight: pw.FontWeight.bold,
+        fontSize: 8, // Smaller font for headers
+      ),
+      cellStyle: const pw.TextStyle(fontSize: 7), // Smaller font for cells
       headerDecoration: const pw.BoxDecoration(color: PdfColors.grey300),
       rowDecoration: const pw.BoxDecoration(
         border: pw.Border(
-          bottom: pw.BorderSide(color: PdfColors.grey200, width: 0.5),
+          bottom: pw.BorderSide(color: PdfColors.grey200, width: 0.3),
         ),
       ),
       columnWidths: {
-        0: const pw.FlexColumnWidth(0.5), // S.No
-        1: const pw.FlexColumnWidth(1.0), // Date
-        2: const pw.FlexColumnWidth(0.8), // Day
+        0: const pw.FixedColumnWidth(30), // S.No - smaller width
+        1: const pw.FixedColumnWidth(70), // Date - smaller width
+        2: const pw.FixedColumnWidth(70), // Day - smaller width
         for (var i = 3; i < headers.length; i++)
-          i: const pw.FlexColumnWidth(1.0),
+          i: const pw.FixedColumnWidth(50), // Class columns - smaller width
       },
+      headerAlignment: pw.Alignment.center,
+      cellAlignment: pw.Alignment.center,
+      cellPadding: const pw.EdgeInsets.all(3), // Smaller padding
     );
   }
 

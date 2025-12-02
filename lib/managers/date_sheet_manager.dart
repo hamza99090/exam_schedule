@@ -1,15 +1,29 @@
-import 'package:exam_schedule/models/table_row_model.dart';
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:exam_schedule/models/table_row_model.dart';
 import '../models/date_sheet_model.dart';
 
 class DateSheetManager extends ChangeNotifier {
   DateSheetData _data = DateSheetData();
-  final List<DateSheetData> _savedDateSheets = [];
+  late Box<DateSheetData> _dateSheetsBox;
+
+  DateSheetManager() {
+    _initHiveBox();
+  }
+
+  Future<void> _initHiveBox() async {
+    _dateSheetsBox = Hive.box<DateSheetData>('dateSheetsBox');
+    notifyListeners();
+  }
 
   DateSheetData get data => _data;
-  List<DateSheetData> get savedDateSheets => _savedDateSheets;
 
-  // Getter for class names - defaults to I through XII
+  // Get saved date sheets from Hive
+  List<DateSheetData> get savedDateSheets {
+    return _dateSheetsBox.values.toList();
+  }
+
+  // Getter for class names
   List<String> get classNames => _data.classNames;
 
   // Default subjects for standard classes
@@ -62,14 +76,11 @@ class DateSheetManager extends ChangeNotifier {
     'XII': ['English', 'Math', 'Physics', 'Chemistry', 'Biology', 'Computer'],
   };
 
-  // Get subjects for a class - use defaults for standard classes, generic for custom
+  // Get subjects for a class
   List<String> getSubjectsForClass(String className) {
-    // If it's a standard class, return default subjects
     if (_defaultClassSubjects.containsKey(className)) {
       return List<String>.from(_defaultClassSubjects[className]!);
     }
-
-    // For custom class names, return default generic subjects
     return ['English', 'Math', 'Science', 'Social Studies', 'Urdu'];
   }
 
@@ -95,7 +106,6 @@ class DateSheetManager extends ChangeNotifier {
 
   void updateDate(int rowIndex, DateTime? date) {
     if (rowIndex < _data.tableRows.length) {
-      print('=== MANAGER: Updating DATE at row $rowIndex to: $date ===');
       _data.tableRows[rowIndex].date = date;
       notifyListeners();
     }
@@ -103,14 +113,8 @@ class DateSheetManager extends ChangeNotifier {
 
   void updateDay(int rowIndex, String? day) {
     if (rowIndex < _data.tableRows.length) {
-      print('=== MANAGER: Updating DAY at row $rowIndex to: $day ===');
       _data.tableRows[rowIndex].day = day;
       notifyListeners();
-
-      // Debug: Verify the update
-      print(
-        '=== VERIFY: Current day in row $rowIndex is now: ${_data.tableRows[rowIndex].day} ===',
-      );
     }
   }
 
@@ -125,44 +129,30 @@ class DateSheetManager extends ChangeNotifier {
     }
   }
 
-  // Updated METHOD: Update class name with better subject handling
   void updateClassName(int index, String newName) {
-    print('=== UPDATE CLASS NAME CALLED ===');
-    print('Index: $index, New name: "$newName"');
-    print('Current classNames before: ${_data.classNames}');
-
     if (index >= 0 && index < _data.classNames.length) {
       final oldClassName = _data.classNames[index];
 
-      // Make sure we're not modifying a const list
       _data.classNames = List<String>.from(_data.classNames);
       _data.classNames[index] = newName;
 
-      // Migrate all existing subject data from old class name to new class name
       for (var row in _data.tableRows) {
         if (row.classSubjects.containsKey(oldClassName)) {
           final subjects = row.classSubjects[oldClassName] ?? [];
           row.classSubjects.remove(oldClassName);
           row.classSubjects[newName] = subjects;
         } else {
-          // Initialize with empty list if this class has no subjects yet
-          // Or initialize with default subjects for this class
           row.classSubjects[newName] = [];
         }
       }
 
       notifyListeners();
-      print(
-        '=== MANAGER: Updated class name at index $index from "$oldClassName" to "$newName" ===',
-      );
     }
   }
 
-  // Update the saveDateSheet method to preserve class names
+  // Save date sheet to Hive
   void saveDateSheet(String fileName) {
-    print('=== SAVE: Current classNames: ${_data.classNames} ===');
-
-    // Create a DEEP copy with all data including classNames
+    // Create a DEEP copy with all data
     final savedSheet = DateSheetData(
       schoolName: _data.schoolName,
       dateSheetDescription: _data.dateSheetDescription,
@@ -170,14 +160,13 @@ class DateSheetManager extends ChangeNotifier {
       tableRows: _data.tableRows.map((row) => row.copyWith()).toList(),
       fileName: fileName,
       createdAt: DateTime.now(),
-      classNames: List<String>.from(_data.classNames), // IMPORTANT: Deep copy
+      classNames: List<String>.from(_data.classNames),
     );
 
-    print('=== SAVE: Saving classNames: ${savedSheet.classNames} ===');
+    // Add to Hive box with auto-generated key
+    _dateSheetsBox.add(savedSheet);
 
-    _savedDateSheets.add(savedSheet);
-
-    // Reset current data - preserve default class names
+    // Reset current data
     _data = DateSheetData(
       schoolName: '',
       dateSheetDescription: '',
@@ -186,24 +175,31 @@ class DateSheetManager extends ChangeNotifier {
       fileName: '',
       createdAt: DateTime.now(),
     );
+
     notifyListeners();
   }
 
-  // Method to load a saved date sheet
+  // Load a saved date sheet
   void loadDateSheet(DateSheetData dateSheet) {
     _data = dateSheet.copyWith();
     notifyListeners();
   }
 
-  // Method to delete a saved date sheet
+  // Delete a saved date sheet
   void deleteDateSheet(int index) {
-    if (index < _savedDateSheets.length) {
-      _savedDateSheets.removeAt(index);
+    if (index < _dateSheetsBox.length) {
+      final key = _dateSheetsBox.keyAt(index);
+      _dateSheetsBox.delete(key);
       notifyListeners();
     }
   }
 
-  // Add this setter
+  // Get date sheet by index
+  DateSheetData getDateSheetByIndex(int index) {
+    return _dateSheetsBox.getAt(index)!;
+  }
+
+  // Setter for data
   set data(DateSheetData newData) {
     _data = newData;
     notifyListeners();

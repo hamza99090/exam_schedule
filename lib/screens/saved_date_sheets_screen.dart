@@ -132,7 +132,9 @@ class _SavedDateSheetsScreenState extends State<SavedDateSheetsScreen> {
   }
 
   void _deleteDateSheet(BuildContext context, int index) {
-    final fileName = widget.manager.savedDateSheets[index].fileName;
+    final dateSheet = widget.manager.savedDateSheets[index];
+    final fileName = dateSheet.fileName;
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -147,7 +149,6 @@ class _SavedDateSheetsScreenState extends State<SavedDateSheetsScreen> {
             onPressed: () {
               widget.manager.deleteDateSheet(index);
               Navigator.pop(context);
-              // Show confirmation message
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text('"$fileName" deleted successfully!'),
