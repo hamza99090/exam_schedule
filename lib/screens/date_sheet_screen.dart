@@ -14,6 +14,8 @@ class DateSheetScreen extends StatefulWidget {
 }
 
 class _DateSheetScreenState extends State<DateSheetScreen> {
+  final ScrollController _scrollController = ScrollController();
+
   void _showSaveDialog() {
     showDialog(
       context: context,
@@ -60,7 +62,6 @@ class _DateSheetScreenState extends State<DateSheetScreen> {
       widget.manager.saveDateSheet(fileName);
     });
 
-    // Show success message
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Date sheet "$fileName" saved successfully!'),
@@ -69,15 +70,34 @@ class _DateSheetScreenState extends State<DateSheetScreen> {
     );
   }
 
+  void _addNewRowAndScroll() {
+    setState(() {
+      widget.manager.addNewRow();
+    });
+
+    // Scroll to bottom after a short delay to allow the UI to update
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        // Hide keyboard when tapping anywhere on screen
         SystemChannels.textInput.invokeMethod('TextInput.hide');
-        // Alternative: FocusScope.of(context).unfocus();
       },
-      behavior: HitTestBehavior.opaque, // This makes sure taps pass through(
+      behavior: HitTestBehavior.opaque,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Create Date Sheet'),
@@ -91,26 +111,73 @@ class _DateSheetScreenState extends State<DateSheetScreen> {
             ),
           ],
         ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              // This should show textfields, not plain text
-              HeaderSection(manager: widget.manager),
-              const SizedBox(height: 24),
-              InteractiveTable(manager: widget.manager, isEditing: true),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: () {
-                  setState(() {
-                    widget.manager.addNewRow();
-                  });
-                },
-                icon: const Icon(Icons.add),
-                label: const Text('Add New Row'),
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              controller: _scrollController,
+              padding: const EdgeInsets.all(16.0),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Header Section
+                    HeaderSection(manager: widget.manager),
+                    const SizedBox(height: 24),
+
+                    // "Create Date Sheet" title
+                    Text(
+                      'Create Date Sheet',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue.shade900,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Interactive Table - This grows with rows
+                    InteractiveTable(manager: widget.manager, isEditing: true),
+
+                    // Add New Row Button - Outside the card, moves down as table grows
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16.0),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.blue.shade600,
+                              Colors.blue.shade800,
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: ElevatedButton.icon(
+                          onPressed: _addNewRowAndScroll,
+                          icon: const Icon(Icons.add),
+                          label: const Text('Add New Row'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 16,
+                              horizontal: 32,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );

@@ -222,6 +222,18 @@ class DateSheetManager extends ChangeNotifier {
     }
   }
 
+  // Add this method to your DateSheetManager class (in date_sheet_manager.dart)
+  void deleteRow(int rowIndex) {
+    if (rowIndex >= 0 && rowIndex < _data.tableRows.length) {
+      _data.tableRows.removeAt(rowIndex);
+      // If all rows are deleted, add one empty row
+      if (_data.tableRows.isEmpty) {
+        _data.tableRows.add(TableRowData(classNames: _data.classNames));
+      }
+      notifyListeners();
+    }
+  }
+
   // Get date sheet by index
   DateSheetData getDateSheetByIndex(int index) {
     return _dateSheetsBox.getAt(index)!;

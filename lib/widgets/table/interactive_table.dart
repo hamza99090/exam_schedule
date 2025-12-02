@@ -7,7 +7,7 @@ import '../cells/subject_multi_selector.dart';
 
 class InteractiveTable extends StatefulWidget {
   final DateSheetManager manager;
-  final bool isEditing; // This parameter controls edit behavior
+  final bool isEditing;
 
   const InteractiveTable({
     super.key,
@@ -26,27 +26,21 @@ class _InteractiveTableState extends State<InteractiveTable> {
   @override
   void initState() {
     super.initState();
-    // Create controllers once for initial data
     for (var className in widget.manager.data.classNames) {
       _classControllers.add(TextEditingController(text: className));
     }
-
-    // Listen to manager changes but DON'T recreate controllers every time.
     widget.manager.addListener(_onManagerChanged);
   }
 
   void _onManagerChanged() {
-    // Sync controller texts with manager data *in-place*
     final classNames = widget.manager.data.classNames;
 
-    // If there are more names than controllers, add new controllers
     if (classNames.length > _classControllers.length) {
       for (var i = _classControllers.length; i < classNames.length; i++) {
         _classControllers.add(TextEditingController(text: classNames[i]));
       }
     }
 
-    // If there are fewer names than controllers, dispose extras
     if (classNames.length < _classControllers.length) {
       for (var i = _classControllers.length - 1; i >= classNames.length; i--) {
         _classControllers[i].dispose();
@@ -54,7 +48,6 @@ class _InteractiveTableState extends State<InteractiveTable> {
       }
     }
 
-    // Update existing controller texts (preserve cursor/selection when possible)
     for (
       var i = 0;
       i < classNames.length && i < _classControllers.length;
@@ -63,7 +56,6 @@ class _InteractiveTableState extends State<InteractiveTable> {
       final ctrl = _classControllers[i];
       final newText = classNames[i];
       if (ctrl.text != newText) {
-        // preserve selection as a best-effort (if selection index is valid)
         final oldSelection = ctrl.selection;
         ctrl.text = newText;
         final newOffset = oldSelection.baseOffset.clamp(0, ctrl.text.length);
@@ -71,8 +63,37 @@ class _InteractiveTableState extends State<InteractiveTable> {
       }
     }
 
-    // rebuild UI
     if (mounted) setState(() {});
+  }
+
+  void _showDeleteConfirmation(int index) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Row'),
+        content: const Text('Are you sure you want to delete this row?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              widget.manager.deleteRow(index);
+              Navigator.pop(context);
+              // Show undo snackbar
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text('Row deleted'),
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -87,57 +108,80 @@ class _InteractiveTableState extends State<InteractiveTable> {
 
   @override
   Widget build(BuildContext context) {
-    // If your whole table must be LTR regardless of app locale, wrap it once:
-    return Directionality(
-      textDirection: TextDirection.ltr,
-      child: Card(
-        elevation: 4,
-        child: Container(
-          height: 200, // Increased height (you can adjust this value)
-          padding: const EdgeInsets.all(16.0),
-          child: Container(
-            padding: const EdgeInsets.only(top: 8.0),
-            child: Scrollbar(
-              controller: _horizontalScrollController,
-              thumbVisibility: true,
-              trackVisibility: true,
-              interactive: true,
-              child: SingleChildScrollView(
-                controller: _horizontalScrollController,
-                scrollDirection: Axis.horizontal,
-                child: DataTable(
-                  headingTextStyle: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    fontSize: 12,
-                  ),
-                  headingRowColor: MaterialStateProperty.all(
-                    Colors.blue.shade700,
-                  ),
-                  dataTextStyle: const TextStyle(fontSize: 11),
-                  columns: [
-                    const DataColumn(label: Text('DATE')),
-                    const DataColumn(label: Text('DAY')),
-                    ...widget.manager.data.classNames.asMap().entries.map((e) {
-                      final index = e.key;
-                      return DataColumn(
-                        label: _buildClassNameEditor(index, e.value),
-                      );
-                    }).toList(),
-                  ],
-                  rows: widget.manager.data.tableRows.asMap().entries.map((e) {
-                    final index = e.key;
-                    final rowData = e.value;
-                    return DataRow(
-                      cells: [
-                        _buildDateCell(index, rowData),
-                        _buildDayCell(index, rowData),
-                        ..._buildClassCells(index, rowData),
-                      ],
-                    );
-                  }).toList(),
-                ),
+    return Card(
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Scrollbar(
+          controller: _horizontalScrollController,
+          thumbVisibility: true,
+          interactive: true,
+          child: SingleChildScrollView(
+            controller: _horizontalScrollController,
+            scrollDirection: Axis.horizontal,
+            child: DataTable(
+              headingTextStyle: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                fontSize: 12,
               ),
+              headingRowColor: MaterialStateProperty.all(Colors.blue.shade700),
+              dataTextStyle: const TextStyle(fontSize: 11),
+              columnSpacing: 8, // Reduced from default (56.0) to 8
+              dataRowMinHeight: 40, // Reduced row height
+              dataRowMaxHeight: 50,
+              columns: [
+                const DataColumn(label: Text('DATE')),
+                const DataColumn(label: Text('DAY')),
+                ...widget.manager.data.classNames.asMap().entries.map((e) {
+                  final index = e.key;
+                  return DataColumn(
+                    label: _buildClassNameEditor(index, e.value),
+                  );
+                }).toList(),
+                // Add Actions column for delete buttons
+                if (widget.isEditing)
+                  const DataColumn(
+                    label: Text(
+                      'ACTION',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+              ],
+              rows: widget.manager.data.tableRows.asMap().entries.map((e) {
+                final index = e.key;
+                final rowData = e.value;
+                return DataRow(
+                  cells: [
+                    _buildDateCell(index, rowData),
+                    _buildDayCell(index, rowData),
+                    ..._buildClassCells(index, rowData),
+                    // Delete button cell - only show in edit mode
+                    if (widget.isEditing)
+                      DataCell(
+                        Container(
+                          width: 40,
+                          child: IconButton(
+                            icon: Icon(
+                              Icons.delete_outline,
+                              color: Colors.red.shade600,
+                              size: 18,
+                            ),
+                            onPressed: () {
+                              _showDeleteConfirmation(index);
+                            },
+                            padding: EdgeInsets.zero,
+                            tooltip: 'Delete row',
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              }).toList(),
             ),
           ),
         ),
@@ -146,37 +190,53 @@ class _InteractiveTableState extends State<InteractiveTable> {
   }
 
   Widget _buildClassNameEditor(int index, String currentName) {
-    // defensive: ensure controller exists
     if (index >= _classControllers.length) {
       _classControllers.add(TextEditingController(text: currentName));
     }
 
     return Container(
       width: 100,
-      child: TextFormField(
-        controller: _classControllers[index],
-        enabled: widget.isEditing,
-        style: const TextStyle(
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-          fontSize: 12,
-        ),
-        textAlign: TextAlign.center,
-        autofocus: false,
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            vertical: 8,
-            horizontal: 4,
+      child: Stack(
+        alignment: Alignment.centerRight,
+        children: [
+          TextFormField(
+            controller: _classControllers[index],
+            enabled: widget.isEditing,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              fontSize: 12,
+            ),
+            textAlign: TextAlign.center,
+            autofocus: false,
+            decoration: InputDecoration(
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(
+                vertical: 8,
+                horizontal: 24, // Extra space for icon
+              ),
+              hintText: 'Tap to edit',
+              hintStyle: const TextStyle(color: Colors.white70, fontSize: 10),
+            ),
+            onChanged: (value) {
+              widget.manager.updateClassName(index, value);
+            },
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Editing class ${index + 1} name'),
+                  duration: const Duration(seconds: 1),
+                ),
+              );
+            },
           ),
-          hintText: 'Class...',
-          hintStyle: const TextStyle(color: Colors.white70),
-        ),
-        onChanged: (value) {
-          // only update manager (which will trigger _onManagerChanged) —
-          // manager should update the underlying data without forcing controllers recreation.
-          widget.manager.updateClassName(index, value);
-        },
+
+          // Edit Icon
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: Icon(Icons.edit, size: 14, color: Colors.white70),
+          ),
+        ],
       ),
     );
   }
@@ -186,11 +246,9 @@ class _InteractiveTableState extends State<InteractiveTable> {
       DatePickerHandler(
         initialDate: rowData.date,
         onDateSelected: (date) {
-          print('=== TABLE: Date selected: $date ===');
           widget.manager.updateDate(index, date);
         },
         onDayUpdated: (day) {
-          print('=== TABLE: Auto-updating day to: $day ===');
           widget.manager.updateDay(index, day);
         },
         enabled: widget.isEditing,
@@ -203,7 +261,6 @@ class _InteractiveTableState extends State<InteractiveTable> {
       DaySelector(
         selectedDay: rowData.day,
         onDaySelected: (day) {
-          print('=== TABLE: Day selected manually: $day ===');
           widget.manager.updateDay(index, day);
         },
         enabled: false,
@@ -220,9 +277,7 @@ class _InteractiveTableState extends State<InteractiveTable> {
           width: 100,
           child: SubjectMultiSelector(
             classNumber: classNum,
-            availableSubjects: widget.manager.getSubjectsForClass(
-              classNum,
-            ), // ADD THIS LINE
+            availableSubjects: widget.manager.getSubjectsForClass(classNum),
             selectedSubjects: rowData.classSubjects[classNum] ?? [],
             onSubjectsChanged: (subjects) {
               widget.manager.updateClassSubjects(index, classNum, subjects);

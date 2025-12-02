@@ -461,7 +461,7 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
         1: const pw.FixedColumnWidth(70), // Date - smaller width
         2: const pw.FixedColumnWidth(70), // Day - smaller width
         for (var i = 3; i < headers.length; i++)
-          i: const pw.FixedColumnWidth(50), // Class columns - smaller width
+          i: const pw.FixedColumnWidth(70), // Class columns - smaller width
       },
       headerAlignment: pw.Alignment.center,
       cellAlignment: pw.Alignment.center,
@@ -493,13 +493,13 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
               onPressed: _toggleEditing,
               tooltip: 'Edit Date Sheet',
             ),
-          if (_isEditing) ...[
-            IconButton(
-              icon: const Icon(Icons.cancel),
-              onPressed: _discardChanges,
-              tooltip: 'Discard Changes',
-            ),
-          ],
+          // if (_isEditing) ...[
+          //   IconButton(
+          //     icon: const Icon(Icons.cancel),
+          //     onPressed: _discardChanges,
+          //     tooltip: 'Discard Changes',
+          //   ),
+          // ],
         ],
       ),
       body: SingleChildScrollView(
