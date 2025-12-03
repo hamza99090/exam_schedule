@@ -136,6 +136,8 @@ class _InteractiveTableState extends State<InteractiveTable> {
                 columnSpacing: 8, // Reduced from default (56.0) to 8
                 dataRowMinHeight: 40, // Reduced row height
                 dataRowMaxHeight: 50,
+                horizontalMargin:
+                    2, // ← ADD THIS LINE - removes left/right padding
                 columns: [
                   const DataColumn(label: Text('DATE')),
                   const DataColumn(label: Text('DAY')),
@@ -344,15 +346,20 @@ class _InteractiveTableState extends State<InteractiveTable> {
 
   DataCell _buildDateCell(int index, TableRowData rowData) {
     return DataCell(
-      DatePickerHandler(
-        initialDate: rowData.date,
-        onDateSelected: (date) {
-          widget.manager.updateDate(index, date);
-        },
-        onDayUpdated: (day) {
-          widget.manager.updateDay(index, day);
-        },
-        enabled: widget.isEditing,
+      Container(
+        padding: EdgeInsets.zero, // ← Remove any container padding
+        margin: EdgeInsets.zero, // ← Remove any container margin
+        alignment: Alignment.centerLeft,
+        child: DatePickerHandler(
+          initialDate: rowData.date,
+          onDateSelected: (date) {
+            widget.manager.updateDate(index, date);
+          },
+          onDayUpdated: (day) {
+            widget.manager.updateDay(index, day);
+          },
+          enabled: widget.isEditing,
+        ),
       ),
     );
   }
