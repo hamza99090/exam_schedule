@@ -15,6 +15,7 @@ class DateSheetScreen extends StatefulWidget {
 
 class _DateSheetScreenState extends State<DateSheetScreen> {
   final ScrollController _scrollController = ScrollController();
+  final GlobalKey<FormState> _headerFormKey = GlobalKey<FormState>();
 
   void _showSaveDialog() {
     showDialog(
@@ -106,7 +107,23 @@ class _DateSheetScreenState extends State<DateSheetScreen> {
           actions: [
             IconButton(
               icon: const Icon(Icons.save),
-              onPressed: _showSaveDialog,
+              onPressed: () {
+                // validate header
+                if (_headerFormKey.currentState!.validate()) {
+                  _showSaveDialog(); // Only open save dialog if valid
+                } else {
+                  // If header invalid, show error message
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        "Please fill required fields before saving.",
+                      ),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+
               tooltip: 'Save Date Sheet',
             ),
           ],
@@ -122,7 +139,11 @@ class _DateSheetScreenState extends State<DateSheetScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Header Section
-                    HeaderSection(manager: widget.manager),
+                    HeaderSection(
+                      manager: widget.manager,
+                      formKey: _headerFormKey,
+                    ),
+
                     const SizedBox(height: 24),
 
                     // "Create Date Sheet" title
