@@ -13,10 +13,14 @@ class SavedDateSheetsScreen extends StatefulWidget {
 }
 
 class _SavedDateSheetsScreenState extends State<SavedDateSheetsScreen> {
+  late VoidCallback listener;
   @override
   void initState() {
     super.initState();
     // Listen to manager changes
+    listener = () {
+      setState(() {});
+    };
     widget.manager.addListener(() {
       setState(() {}); // Rebuild when manager changes
     });

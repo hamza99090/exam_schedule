@@ -1,3 +1,4 @@
+import 'package:exam_schedule/screens/saved_date_sheets_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../managers/date_sheet_manager.dart';
@@ -125,6 +126,46 @@ class _DateSheetScreenState extends State<DateSheetScreen> {
               },
 
               tooltip: 'Save Date Sheet',
+            ),
+            // Saved files button with badge
+            Stack(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.folder_copy_rounded),
+                  tooltip: "Saved Date Sheets",
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            SavedDateSheetsScreen(manager: widget.manager),
+                      ),
+                    );
+                  },
+                ),
+
+                // Badge
+                if (widget.manager.savedDateSheets.isNotEmpty)
+                  Positioned(
+                    right: 6,
+                    top: 6,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        widget.manager.savedDateSheets.length.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ],
         ),

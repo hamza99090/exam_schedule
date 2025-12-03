@@ -25,18 +25,33 @@ class _HeaderSectionState extends State<HeaderSection> {
   void initState() {
     super.initState();
 
-    // Move controllers here to prevent rebuild issues
     schoolController = TextEditingController(
       text: widget.manager.data.schoolName,
     );
-
     descriptionController = TextEditingController(
       text: widget.manager.data.dateSheetDescription,
     );
-
     termController = TextEditingController(
       text: widget.manager.data.termDescription,
     );
+
+    // Listen for changes in manager (e.g., after saving)
+    widget.manager.addListener(_updateControllers);
+  }
+
+  void _updateControllers() {
+    schoolController.text = widget.manager.data.schoolName;
+    descriptionController.text = widget.manager.data.dateSheetDescription;
+    termController.text = widget.manager.data.termDescription;
+  }
+
+  @override
+  void dispose() {
+    widget.manager.removeListener(_updateControllers); // remove listener
+    schoolController.dispose();
+    descriptionController.dispose();
+    termController.dispose();
+    super.dispose();
   }
 
   @override
