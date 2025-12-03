@@ -117,6 +117,30 @@ class DateSheetManager extends ChangeNotifier {
   }
 
   // Save date sheet to Hive
+  // Add this method to DateSheetManager
+  void resetToDefault() {
+    final defaultClassNames = List<String>.from(
+      DateSheetData.defaultClassNames,
+    );
+
+    _data = DateSheetData(
+      schoolName: '',
+      dateSheetDescription: '',
+      termDescription: '',
+      tableRows: [
+        TableRowData(
+          classNames: defaultClassNames,
+        ), // Empty row with all classes
+      ],
+      fileName: '',
+      createdAt: DateTime.now(),
+      classNames: defaultClassNames,
+    );
+
+    notifyListeners();
+  }
+
+  // Update saveDateSheet() to use it
   void saveDateSheet(String fileName) {
     // Create a DEEP copy with all data
     final savedSheet = DateSheetData(
@@ -129,20 +153,11 @@ class DateSheetManager extends ChangeNotifier {
       classNames: List<String>.from(_data.classNames),
     );
 
-    // Add to Hive box with auto-generated key
+    // Add to Hive box
     _dateSheetsBox.add(savedSheet);
 
-    // Reset current data
-    _data = DateSheetData(
-      schoolName: '',
-      dateSheetDescription: '',
-      termDescription: '',
-      tableRows: [TableRowData()],
-      fileName: '',
-      createdAt: DateTime.now(),
-    );
-
-    notifyListeners();
+    // Reset to default state
+    resetToDefault();
   }
 
   // Load a saved date sheet

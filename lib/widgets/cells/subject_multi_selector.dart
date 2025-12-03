@@ -43,12 +43,33 @@ class _SubjectMultiSelectorState extends State<SubjectMultiSelector> {
     //       )
     //       .toList();
     // }
+    _selectedSubjects = List.from(widget.selectedSubjects);
     _customSubjects = _selectedSubjects
         .where(
           (subject) =>
               subject != '—' && !widget.availableSubjects.contains(subject),
         )
         .toList();
+  }
+
+  @override
+  void didUpdateWidget(SubjectMultiSelector oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // CRITICAL: Update local state when parent data changes
+    if (widget.selectedSubjects != oldWidget.selectedSubjects) {
+      setState(() {
+        _selectedSubjects = List.from(widget.selectedSubjects);
+
+        // Also update custom subjects
+        _customSubjects = _selectedSubjects
+            .where(
+              (subject) =>
+                  subject != '—' && !widget.availableSubjects.contains(subject),
+            )
+            .toList();
+      });
+    }
   }
 
   void _showSubjectSelectionDialog() {

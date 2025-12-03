@@ -81,7 +81,7 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
     return InkWell(
       onTap: widget.enabled ? _selectDate : null,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
         decoration: BoxDecoration(
           border: Border.all(color: Colors.grey.shade300),
           borderRadius: BorderRadius.circular(4),

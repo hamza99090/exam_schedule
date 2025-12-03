@@ -67,7 +67,10 @@ class _HeaderSectionState extends State<HeaderSection> {
               key: widget.formKey,
               child: TextFormField(
                 controller: schoolController,
-                // onChanged: widget.manager.updateSchoolName,
+                onChanged: (value) {
+                  // Update manager immediately when text changes
+                  widget.manager.updateSchoolName(value);
+                },
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return "School name is required";
@@ -104,7 +107,9 @@ class _HeaderSectionState extends State<HeaderSection> {
             // -------------------- SECOND TEXTFIELD (UNCHANGED) --------------------
             TextFormField(
               controller: descriptionController,
-              onChanged: widget.manager.updateDateSheetDescription,
+              onChanged: (value) {
+                widget.manager.updateDateSheetDescription(value);
+              },
               style: TextStyle(
                 fontSize: 14,
                 color: widget.manager.data.dateSheetDescription.isEmpty
@@ -130,7 +135,9 @@ class _HeaderSectionState extends State<HeaderSection> {
             // -------------------- THIRD TEXTFIELD (UNCHANGED) --------------------
             TextFormField(
               controller: termController,
-              onChanged: widget.manager.updateTermDescription,
+              onChanged: (value) {
+                widget.manager.updateTermDescription(value);
+              },
               style: TextStyle(
                 fontSize: 14,
                 color: widget.manager.data.termDescription.isEmpty
