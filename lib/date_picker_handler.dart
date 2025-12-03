@@ -53,21 +53,21 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
   String _getDayName(int weekday) {
     switch (weekday) {
       case 1:
-        return 'Monday';
+        return 'Mon';
       case 2:
-        return 'Tuesday';
+        return 'Tue';
       case 3:
-        return 'Wednesday';
+        return 'Wed';
       case 4:
-        return 'Thursday';
+        return 'Thu';
       case 5:
-        return 'Friday';
+        return 'Fri';
       case 6:
-        return 'Saturday';
+        return 'Sat';
       case 7:
-        return 'Sunday';
+        return 'Sun';
       default:
-        return 'Monday';
+        return 'Mon';
     }
   }
 
