@@ -334,9 +334,19 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
   Future<Uint8List> _generatePDFBytes() async {
     final pdf = pw.Document();
 
+    final totalColumns =
+        _editableDateSheet.classNames.length + 3; // S.No, Date, Day + classes
+    final shouldUseLandscape = totalColumns > 10;
+
+    final pageFormat = shouldUseLandscape
+        ? PdfPageFormat
+              .a4
+              .landscape // Use landscape for many columns
+        : PdfPageFormat.a4; // Use portrait for few columns
+
     pdf.addPage(
       pw.MultiPage(
-        pageFormat: PdfPageFormat.a4,
+        pageFormat: pageFormat, // Use dynamic page format
         margin: const pw.EdgeInsets.all(20),
         build: (pw.Context context) {
           return [
@@ -346,7 +356,7 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
               child: pw.Text(
                 _editableDateSheet.schoolName,
                 style: pw.TextStyle(
-                  fontSize: 24,
+                  fontSize: shouldUseLandscape ? 22 : 24,
                   fontWeight: pw.FontWeight.bold,
                 ),
                 textAlign: pw.TextAlign.center,
@@ -358,7 +368,10 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
             // Date Sheet Description
             pw.Text(
               _editableDateSheet.dateSheetDescription,
-              style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+              style: pw.TextStyle(
+                fontSize: shouldUseLandscape ? 16 : 18,
+                fontWeight: pw.FontWeight.bold,
+              ),
               textAlign: pw.TextAlign.center,
             ),
 
@@ -367,7 +380,7 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
             // Term Description
             pw.Text(
               _editableDateSheet.termDescription,
-              style: const pw.TextStyle(fontSize: 14),
+              style: pw.TextStyle(fontSize: shouldUseLandscape ? 12 : 14),
               textAlign: pw.TextAlign.center,
             ),
 
@@ -376,20 +389,20 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
             // Generation Date
             pw.Text(
               'Generated on: ${_formatDateForPDF(DateTime.now())}',
-              style: pw.TextStyle(fontSize: 12, fontStyle: pw.FontStyle.italic),
+              style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic),
             ),
 
             pw.SizedBox(height: 30),
 
             // Data Table
-            _buildPDFTable(),
+            _buildPDFTable(shouldUseLandscape),
 
             pw.SizedBox(height: 30),
 
             // Footer
             pw.Text(
               'Official document - ${_editableDateSheet.schoolName}',
-              style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic),
+              style: pw.TextStyle(fontSize: 9, fontStyle: pw.FontStyle.italic),
               textAlign: pw.TextAlign.center,
             ),
           ];
@@ -400,7 +413,7 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
     return await pdf.save();
   }
 
-  pw.Widget _buildPDFTable() {
+  pw.Widget _buildPDFTable(bool isLandscape) {
     // Create headers - starting with S.No, Date, Day
     final headers = ['S.No', 'Date', 'Day', ..._editableDateSheet.classNames];
 
@@ -435,37 +448,37 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
       return rowData;
     }).toList();
 
-    // Remove empty rows (where all cells are empty)
-    rows.removeWhere((row) {
-      // Skip S.No column (index 0) when checking
-      return row.skip(1).every((cell) => cell.isEmpty);
-    });
+    // Remove empty rows
+    rows.removeWhere((row) => row.skip(1).every((cell) => cell.isEmpty));
 
+    // Use Table.fromTextArray with default column widths
     return pw.Table.fromTextArray(
       headers: headers,
       data: rows,
       border: pw.TableBorder.all(width: 0.5),
       headerStyle: pw.TextStyle(
         fontWeight: pw.FontWeight.bold,
-        fontSize: 8, // Smaller font for headers
+        fontSize: isLandscape ? 9 : 10,
       ),
-      cellStyle: const pw.TextStyle(fontSize: 7), // Smaller font for cells
+      cellStyle: pw.TextStyle(fontSize: isLandscape ? 8 : 9),
       headerDecoration: const pw.BoxDecoration(color: PdfColors.grey300),
       rowDecoration: const pw.BoxDecoration(
         border: pw.Border(
           bottom: pw.BorderSide(color: PdfColors.grey200, width: 0.3),
         ),
       ),
+      // Let the table handle column widths automatically
       columnWidths: {
-        0: const pw.FixedColumnWidth(30), // S.No - smaller width
-        1: const pw.FixedColumnWidth(70), // Date - smaller width
-        2: const pw.FixedColumnWidth(70), // Day - smaller width
+        0: const pw.FixedColumnWidth(25), // S.No
+        1: const pw.FixedColumnWidth(65), // Date
+        2: const pw.FixedColumnWidth(50), // Day
+        // For class columns, let them be flexible
         for (var i = 3; i < headers.length; i++)
-          i: const pw.FixedColumnWidth(70), // Class columns - smaller width
+          i: const pw.FlexColumnWidth(1.0),
       },
       headerAlignment: pw.Alignment.center,
       cellAlignment: pw.Alignment.center,
-      cellPadding: const pw.EdgeInsets.all(3), // Smaller padding
+      cellPadding: const pw.EdgeInsets.all(3),
     );
   }
 
