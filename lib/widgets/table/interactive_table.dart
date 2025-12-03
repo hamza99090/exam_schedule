@@ -224,7 +224,7 @@ class _InteractiveTableState extends State<InteractiveTable> {
               contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 24),
             ),
             onTap: () {
-              _showClassNameEditDialog(index, currentName, isStarred);
+              _showClassSelectionPopup(index);
             },
           ),
 
@@ -388,5 +388,224 @@ class _InteractiveTableState extends State<InteractiveTable> {
         ),
       );
     }).toList();
+  }
+
+  void _showClassSelectionPopup(int index) {
+    final TextEditingController customController = TextEditingController();
+
+    // Default classes (always present)
+    final List<String> defaultClasses = [
+      "Class I",
+      "Class II",
+      "Class III",
+      "Class IV",
+      "Class V",
+      "Class VI",
+      "Class VII",
+      "Class VIII",
+      "Class IX",
+      "Class X",
+      "Class XI",
+      "Class XII",
+    ];
+
+    // Custom classes (your starred ones)
+    List<String> customClasses = List.from(widget.manager.starredClassNames);
+
+    // Selected class (current column's class)
+    String selectedClass = widget.manager.data.classNames[index];
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            // Merge custom + default classes, custom first
+            List<String> allClasses = [...customClasses, ...defaultClasses];
+
+            return AlertDialog(
+              title: Text("Select Class"),
+              content: SizedBox(
+                width: 400,
+                height: 400,
+                child: Column(
+                  children: [
+                    /// Add custom class
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: customController,
+                            decoration: InputDecoration(
+                              hintText: "Add custom class",
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 6),
+                        IconButton(
+                          icon: Icon(Icons.add),
+                          onPressed: () {
+                            final name = customController.text.trim();
+                            if (name.isEmpty) return;
+
+                            setState(() {
+                              // Add to custom list on top
+                              customClasses.insert(0, name);
+
+                              // Select it immediately
+                              selectedClass = name;
+                              widget.manager.toggleStarClassName(name);
+                            });
+
+                            customController.clear();
+                          },
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 16),
+
+                    /// Class list
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: allClasses.length,
+                        itemBuilder: (context, i) {
+                          final item = allClasses[i];
+                          final isCustom = customClasses.contains(item);
+
+                          return ListTile(
+                            leading: Radio<String>(
+                              value: item,
+                              groupValue: selectedClass,
+                              onChanged: (value) {
+                                setState(() {
+                                  selectedClass = value!;
+                                });
+                              },
+                            ),
+                            title: Text(item),
+                            trailing: isCustom
+                                ? PopupMenuButton<String>(
+                                    icon: Icon(Icons.more_vert, size: 20),
+                                    onSelected: (choice) async {
+                                      if (choice == 'Edit') {
+                                        // Edit custom class
+                                        final editController =
+                                            TextEditingController(text: item);
+                                        await showDialog(
+                                          context: context,
+                                          builder: (context) {
+                                            return AlertDialog(
+                                              title: Text("Edit Custom Class"),
+                                              content: TextField(
+                                                controller: editController,
+                                                decoration: InputDecoration(
+                                                  hintText: "Class name",
+                                                  border: OutlineInputBorder(),
+                                                ),
+                                              ),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.pop(context),
+                                                  child: Text("Cancel"),
+                                                ),
+                                                ElevatedButton(
+                                                  onPressed: () {
+                                                    final newName =
+                                                        editController.text
+                                                            .trim();
+                                                    if (newName.isNotEmpty) {
+                                                      setState(() {
+                                                        final idx =
+                                                            customClasses
+                                                                .indexOf(item);
+                                                        customClasses[idx] =
+                                                            newName;
+
+                                                        // Update selection if needed
+                                                        if (selectedClass ==
+                                                            item) {
+                                                          selectedClass =
+                                                              newName;
+                                                        }
+
+                                                        // Update in manager starred list
+                                                        widget.manager
+                                                            .toggleStarClassName(
+                                                              item,
+                                                            ); // remove old
+                                                        widget.manager
+                                                            .toggleStarClassName(
+                                                              newName,
+                                                            ); // add new
+                                                      });
+                                                      Navigator.pop(context);
+                                                    }
+                                                  },
+                                                  child: Text("Save"),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+                                      } else if (choice == 'Delete') {
+                                        setState(() {
+                                          customClasses.remove(item);
+
+                                          // Remove from starred
+                                          if (widget.manager.starredClassNames
+                                              .contains(item)) {
+                                            widget.manager.toggleStarClassName(
+                                              item,
+                                            );
+                                          }
+
+                                          // If it was selected, reset selection
+                                          if (selectedClass == item) {
+                                            selectedClass =
+                                                defaultClasses.first;
+                                          }
+                                        });
+                                      }
+                                    },
+                                    itemBuilder: (context) => [
+                                      PopupMenuItem(
+                                        value: 'Edit',
+                                        child: Text('Edit'),
+                                      ),
+                                      PopupMenuItem(
+                                        value: 'Delete',
+                                        child: Text('Delete'),
+                                      ),
+                                    ],
+                                  )
+                                : null,
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text("Cancel"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    // Update the class name in table column
+                    widget.manager.updateClassName(index, selectedClass);
+                    Navigator.pop(context);
+                  },
+                  child: Text("Save"),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 }

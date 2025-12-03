@@ -73,68 +73,66 @@ class _SubjectMultiSelectorState extends State<SubjectMultiSelector> {
   }
 
   void _showSubjectSelectionDialog() {
-    // final availableSubjects = ClassSubjectsData.getSubjectsForClass(
-    //   widget.classNumber,
-    // );
-    final availableSubjects =
-        widget.availableSubjects; // Use passed availableSubjects
+    final availableSubjects = widget.availableSubjects;
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            // Combine all subjects for the list
-            final allSubjects = [...availableSubjects, ..._customSubjects];
+            // Merge default + custom subjects
+            List<String> allSubjects = [
+              ..._customSubjects,
+              ...availableSubjects,
+            ];
 
             return AlertDialog(
               title: Text('Select Subjects for Class ${widget.classNumber}'),
               content: SizedBox(
                 width: double.maxFinite,
+                height: 400,
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Add Custom Subject Section
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16.0),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _customSubjectController,
-                              decoration: const InputDecoration(
-                                labelText: 'Add Custom Subject',
-                                hintText: 'Enter subject name',
-                                border: OutlineInputBorder(),
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
+                    /// Add custom subject
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _customSubjectController,
+                            decoration: const InputDecoration(
+                              labelText: 'Add Custom Subject',
+                              hintText: 'Enter subject name',
+                              border: OutlineInputBorder(),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
                               ),
-                              onSubmitted: (value) {
-                                _addCustomSubject(value, setDialogState);
-                              },
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          IconButton(
-                            icon: const Icon(Icons.add, color: Colors.green),
-                            onPressed: () {
-                              _addCustomSubject(
-                                _customSubjectController.text,
-                                setDialogState,
-                              );
+                            onSubmitted: (value) {
+                              _addCustomSubject(value, setDialogState);
                             },
-                            tooltip: 'Add Custom Subject',
                           ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          icon: const Icon(Icons.add, color: Colors.green),
+                          onPressed: () {
+                            _addCustomSubject(
+                              _customSubjectController.text,
+                              setDialogState,
+                            );
+                          },
+                          tooltip: 'Add Custom Subject',
+                        ),
+                      ],
                     ),
-                    // Subjects List
+                    const SizedBox(height: 16),
+
+                    /// Subjects list
                     Expanded(
                       child: ListView.builder(
                         shrinkWrap: true,
-                        itemCount: allSubjects.length + 1, // +1 for "—" option
+                        itemCount: allSubjects.length + 1,
                         itemBuilder: (context, index) {
                           if (index == 0) {
                             // "—" option
@@ -153,48 +151,112 @@ class _SubjectMultiSelectorState extends State<SubjectMultiSelector> {
                             );
                           }
 
-                          // Adjust index for subjects (after "—")
                           final subjectIndex = index - 1;
                           final subject = allSubjects[subjectIndex];
-
-                          // Check if this is a custom subject
                           final isCustomSubject =
-                              subjectIndex >= availableSubjects.length;
+                              subjectIndex < _customSubjects.length;
 
-                          return CheckboxListTile(
+                          return ListTile(
+                            leading: Checkbox(
+                              value: _selectedSubjects.contains(subject),
+                              onChanged: (bool? value) {
+                                setDialogState(() {
+                                  if (value == true) {
+                                    _selectedSubjects.remove('—');
+                                    _selectedSubjects.add(subject);
+                                  } else {
+                                    _selectedSubjects.remove(subject);
+                                  }
+                                });
+                              },
+                            ),
                             title: Text(subject),
                             subtitle: isCustomSubject
                                 ? const Text('Custom subject')
                                 : null,
-                            value: _selectedSubjects.contains(subject),
-                            onChanged: (bool? value) {
-                              setDialogState(() {
-                                if (value == true) {
-                                  _selectedSubjects.remove('—');
-                                  _selectedSubjects.add(subject);
-                                } else {
-                                  _selectedSubjects.remove(subject);
-                                  // Remove from custom subjects if it's a custom subject
-                                  if (isCustomSubject) {
-                                    _customSubjects.remove(subject);
-                                  }
-                                }
-                              });
-                            },
-                            secondary: isCustomSubject
-                                ? IconButton(
-                                    icon: Icon(
-                                      Icons.delete,
-                                      size: 18,
-                                      color: Colors.red.shade600,
-                                    ),
-                                    onPressed: () {
-                                      setDialogState(() {
-                                        _selectedSubjects.remove(subject);
-                                        _customSubjects.remove(subject);
-                                      });
+                            trailing: isCustomSubject
+                                ? PopupMenuButton<String>(
+                                    icon: const Icon(Icons.more_vert, size: 20),
+                                    onSelected: (choice) async {
+                                      if (choice == 'Edit') {
+                                        final editController =
+                                            TextEditingController(
+                                              text: subject,
+                                            );
+                                        await showDialog(
+                                          context: context,
+                                          builder: (context) {
+                                            return AlertDialog(
+                                              title: const Text(
+                                                'Edit Custom Subject',
+                                              ),
+                                              content: TextField(
+                                                controller: editController,
+                                                decoration:
+                                                    const InputDecoration(
+                                                      hintText: 'Subject name',
+                                                      border:
+                                                          OutlineInputBorder(),
+                                                    ),
+                                              ),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.pop(context),
+                                                  child: const Text('Cancel'),
+                                                ),
+                                                ElevatedButton(
+                                                  onPressed: () {
+                                                    final newName =
+                                                        editController.text
+                                                            .trim();
+                                                    if (newName.isNotEmpty) {
+                                                      setDialogState(() {
+                                                        final idx =
+                                                            _customSubjects
+                                                                .indexOf(
+                                                                  subject,
+                                                                );
+                                                        _customSubjects[idx] =
+                                                            newName;
+
+                                                        if (_selectedSubjects
+                                                            .contains(
+                                                              subject,
+                                                            )) {
+                                                          _selectedSubjects
+                                                              .remove(subject);
+                                                          _selectedSubjects.add(
+                                                            newName,
+                                                          );
+                                                        }
+                                                      });
+                                                      Navigator.pop(context);
+                                                    }
+                                                  },
+                                                  child: const Text('Save'),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+                                      } else if (choice == 'Delete') {
+                                        setDialogState(() {
+                                          _customSubjects.remove(subject);
+                                          _selectedSubjects.remove(subject);
+                                        });
+                                      }
                                     },
-                                    tooltip: 'Remove custom subject',
+                                    itemBuilder: (context) => [
+                                      const PopupMenuItem(
+                                        value: 'Edit',
+                                        child: Text('Edit'),
+                                      ),
+                                      const PopupMenuItem(
+                                        value: 'Delete',
+                                        child: Text('Delete'),
+                                      ),
+                                    ],
                                   )
                                 : null,
                           );
