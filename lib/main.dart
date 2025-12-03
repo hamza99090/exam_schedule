@@ -17,6 +17,8 @@ Future<void> main() async {
 
   // Open the dateSheets box
   await Hive.openBox<DateSheetData>('dateSheetsBox');
+  // Add this line
+  await Hive.openBox<List<String>>('starredClassesBox');
 
   runApp(const MyApp());
 }

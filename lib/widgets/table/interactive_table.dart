@@ -201,6 +201,8 @@ class _InteractiveTableState extends State<InteractiveTable> {
       _classControllers.add(TextEditingController(text: currentName));
     }
 
+    final isStarred = widget.manager.isClassNameStarred(currentName);
+
     return Container(
       width: 100,
       child: Stack(
@@ -209,42 +211,134 @@ class _InteractiveTableState extends State<InteractiveTable> {
           TextFormField(
             controller: _classControllers[index],
             enabled: widget.isEditing,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.bold,
               color: Colors.white,
               fontSize: 12,
             ),
             textAlign: TextAlign.center,
             autofocus: false,
+            readOnly: true, // Make it read-only, will handle tap separately
             decoration: InputDecoration(
               border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(
-                vertical: 8,
-                horizontal: 24, // Extra space for icon
-              ),
-              hintText: 'Tap to edit',
-              hintStyle: const TextStyle(color: Colors.white70, fontSize: 10),
+              contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 24),
             ),
-            onChanged: (value) {
-              widget.manager.updateClassName(index, value);
-            },
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Editing class ${index + 1} name'),
-                  duration: const Duration(seconds: 1),
-                ),
-              );
+              _showClassNameEditDialog(index, currentName, isStarred);
             },
           ),
 
-          // Edit Icon
-          Padding(
-            padding: const EdgeInsets.only(right: 8.0),
+          // Star Icon (on the left)
+          if (isStarred)
+            Positioned(
+              left: 4,
+              child: Icon(Icons.star, size: 14, color: Colors.yellow),
+            ),
+
+          // Edit Icon (on the right)
+          Positioned(
+            right: 4,
             child: Icon(Icons.edit, size: 14, color: Colors.white70),
           ),
         ],
       ),
+    );
+  }
+
+  void _showClassNameEditDialog(int index, String currentName, bool isStarred) {
+    if (!widget.isEditing) return;
+
+    final TextEditingController editController = TextEditingController(
+      text: currentName,
+    );
+    bool starValue = isStarred;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Edit Class Name'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: editController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  labelText: 'Class Name',
+                  hintText: 'Enter class name',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              SizedBox(height: 16),
+              Row(
+                children: [
+                  Checkbox(
+                    value: starValue,
+                    onChanged: (value) {
+                      starValue = value ?? false;
+                      (context as Element).markNeedsBuild();
+                    },
+                  ),
+                  SizedBox(width: 8),
+                  Text('Star this class name'),
+                  SizedBox(width: 8),
+                  Icon(
+                    Icons.star,
+                    color: starValue ? Colors.yellow : Colors.grey,
+                    size: 20,
+                  ),
+                ],
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Starred class names will appear in new date sheets',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final newName = editController.text.trim();
+                if (newName.isNotEmpty) {
+                  // Update the class name
+                  widget.manager.updateClassName(
+                    index,
+                    newName,
+                    star: starValue,
+                  );
+
+                  // If star status changed, toggle it
+                  if (starValue != isStarred) {
+                    widget.manager.toggleStarClassName(newName);
+                  }
+
+                  Navigator.pop(context);
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Class name updated${starValue ? ' and starred' : ''}',
+                      ),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                }
+              },
+              child: Text('Save'),
+            ),
+          ],
+        );
+      },
     );
   }
 

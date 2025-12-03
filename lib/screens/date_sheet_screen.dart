@@ -97,7 +97,7 @@ class _DateSheetScreenState extends State<DateSheetScreen> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        SystemChannels.textInput.invokeMethod('TextInput.hide');
+        FocusManager.instance.primaryFocus?.unfocus();
       },
       behavior: HitTestBehavior.opaque,
       child: Scaffold(

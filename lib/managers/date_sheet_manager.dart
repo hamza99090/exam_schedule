@@ -6,13 +6,19 @@ import '../models/date_sheet_model.dart';
 class DateSheetManager extends ChangeNotifier {
   DateSheetData _data = DateSheetData();
   late Box<DateSheetData> _dateSheetsBox;
+  List<String> _starredClassNames = [];
+
+  // Getter for starred class names
+  List<String> get starredClassNames => List.from(_starredClassNames);
 
   DateSheetManager() {
     _initHiveBox();
   }
 
+  // Update the init method to load starred names
   Future<void> _initHiveBox() async {
     _dateSheetsBox = Hive.box<DateSheetData>('dateSheetsBox');
+    await _loadStarredClassNames(); // Load starred names
     notifyListeners();
   }
 
@@ -95,12 +101,22 @@ class DateSheetManager extends ChangeNotifier {
     }
   }
 
-  void updateClassName(int index, String newName) {
+  // Update the updateClassName method to support starring
+  void updateClassName(int index, String newName, {bool star = false}) {
     if (index >= 0 && index < _data.classNames.length) {
       final oldClassName = _data.classNames[index];
 
       _data.classNames = List<String>.from(_data.classNames);
       _data.classNames[index] = newName;
+
+      // Update starring
+      if (star) {
+        if (!_starredClassNames.contains(newName)) {
+          _starredClassNames.add(newName);
+        }
+        // Remove old name from starred if it was starred
+        _starredClassNames.remove(oldClassName);
+      }
 
       for (var row in _data.tableRows) {
         if (row.classSubjects.containsKey(oldClassName)) {
@@ -112,29 +128,65 @@ class DateSheetManager extends ChangeNotifier {
         }
       }
 
+      // Save starred class names to Hive
+      _saveStarredClassNames();
+
       notifyListeners();
     }
   }
 
+  // Method to star/unstar a class name
+  void toggleStarClassName(String className) {
+    if (_starredClassNames.contains(className)) {
+      _starredClassNames.remove(className);
+    } else {
+      _starredClassNames.add(className);
+    }
+    _saveStarredClassNames();
+    notifyListeners();
+  }
+
+  // Check if a class name is starred
+  bool isClassNameStarred(String className) {
+    return _starredClassNames.contains(className);
+  }
+
+  // Save starred class names to Hive
+  Future<void> _saveStarredClassNames() async {
+    final starredBox = Hive.box<List<String>>('starredClassesBox');
+    await starredBox.put('starredClassNames', _starredClassNames);
+  }
+
+  // Load starred class names from Hive
+  Future<void> _loadStarredClassNames() async {
+    final starredBox = Hive.box<List<String>>('starredClassesBox');
+    _starredClassNames =
+        starredBox.get('starredClassNames', defaultValue: []) ?? [];
+  }
+
   // Save date sheet to Hive
   // Add this method to DateSheetManager
+  // Update resetToDefault to use starred class names
   void resetToDefault() {
-    final defaultClassNames = List<String>.from(
-      DateSheetData.defaultClassNames,
-    );
+    // Start with default class names
+    List<String> initialClassNames = List.from(DateSheetData.defaultClassNames);
+
+    // Add any starred class names that aren't already in defaults
+    for (var starredName in _starredClassNames) {
+      if (!initialClassNames.contains(starredName)) {
+        // Add starred names at the beginning
+        initialClassNames.insert(0, starredName);
+      }
+    }
 
     _data = DateSheetData(
       schoolName: '',
       dateSheetDescription: '',
       termDescription: '',
-      tableRows: [
-        TableRowData(
-          classNames: defaultClassNames,
-        ), // Empty row with all classes
-      ],
+      tableRows: [TableRowData(classNames: initialClassNames)],
       fileName: '',
       createdAt: DateTime.now(),
-      classNames: defaultClassNames,
+      classNames: initialClassNames,
     );
 
     notifyListeners();
