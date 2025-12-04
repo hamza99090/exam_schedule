@@ -391,7 +391,7 @@ class _SubjectMultiSelectorState extends State<SubjectMultiSelector> {
     // Read-only mode when not enabled
     if (!widget.enabled) {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           border: Border.all(color: Colors.grey.shade300),
           borderRadius: BorderRadius.circular(4),
@@ -399,7 +399,7 @@ class _SubjectMultiSelectorState extends State<SubjectMultiSelector> {
         child: Text(
           _getDisplayText(),
           style: TextStyle(
-            fontSize: 10,
+            fontSize: 11,
             color: _selectedSubjects.isEmpty ? Colors.grey : Colors.black87,
           ),
           textAlign: TextAlign.center,
@@ -413,10 +413,14 @@ class _SubjectMultiSelectorState extends State<SubjectMultiSelector> {
     return ElevatedButton(
       onPressed: _showSubjectSelectionDialog,
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.blue.shade50,
-        foregroundColor: Colors.blue.shade800,
-        elevation: 1,
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        backgroundColor: Colors.transparent, // Match DATE (no blue background)
+        foregroundColor: Colors.black87, // Match DATE text color
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(4), // Same rounded corners
+          side: BorderSide(color: Colors.grey.shade300), // Same border color
+        ),
       ),
       child: Text(
         _getDisplayText(),
