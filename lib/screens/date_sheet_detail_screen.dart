@@ -495,17 +495,17 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
         foregroundColor: Colors.white,
         actions: [
           // Add Download button here (first in the list)
-          IconButton(
-            icon: const Icon(Icons.download),
-            onPressed: _downloadDateSheet,
-            tooltip: 'Download as PDF',
-          ),
           if (!_isEditing)
             IconButton(
               icon: const Icon(Icons.edit),
               onPressed: _toggleEditing,
               tooltip: 'Edit Date Sheet',
             ),
+          IconButton(
+            icon: const Icon(Icons.download),
+            onPressed: _downloadDateSheet,
+            tooltip: 'Download as PDF',
+          ),
           // if (_isEditing) ...[
           //   IconButton(
           //     icon: const Icon(Icons.cancel),
