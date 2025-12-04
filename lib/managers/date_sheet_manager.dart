@@ -34,18 +34,18 @@ class DateSheetManager extends ChangeNotifier {
 
   // Default subjects for standard classes
   static final Map<String, List<String>> _defaultClassSubjects = {
-    'Class I': ['English', 'Math', 'Urdu', 'Science', 'Drawing'],
-    'Class II': ['English', 'Math', 'Urdu', 'Science', 'Drawing'],
-    'Class III': ['English', 'Math', 'Urdu', 'Science', 'Drawing'],
-    'Class IV': ['English', 'Math', 'Urdu', 'Science', 'Drawing'],
-    'Class V': ['English', 'Math', 'Urdu', 'Science', 'Drawing'],
-    'Class VI': ['English', 'Math', 'Urdu', 'Science', 'Drawing'],
-    'Class VII': ['English', 'Math', 'Urdu', 'Science', 'Drawing'],
-    'Class VIII': ['English', 'Math', 'Urdu', 'Science', 'Drawing'],
-    'Class IX': ['English', 'Math', 'Urdu', 'Science', 'Drawing'],
-    'Class X': ['English', 'Math', 'Urdu', 'Science', 'Drawing'],
-    'Class XI': ['English', 'Math', 'Urdu', 'Science', 'Drawing'],
-    'Class XII': ['English', 'Math', 'Urdu', 'Science', 'Drawing'],
+    'Class I': ['English', 'Math'],
+    'Class II': ['English', 'Math'],
+    'Class III': ['English', 'Math'],
+    'Class IV': ['English', 'Math'],
+    'Class V': ['English', 'Math'],
+    'Class VI': ['English', 'Math'],
+    'Class VII': ['English', 'Math'],
+    'Class VIII': ['English', 'Math'],
+    'Class IX': ['English', 'Math'],
+    'Class X': ['English', 'Math'],
+    'Class XI': ['English', 'Math'],
+    'Class XII': ['English', 'Math'],
   };
 
   // Get subjects for a class
