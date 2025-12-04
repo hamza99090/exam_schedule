@@ -213,12 +213,40 @@ class _SubjectMultiSelectorState extends State<SubjectMultiSelector> {
                                                     ),
                                               ),
                                               actions: [
-                                                TextButton(
+                                                ElevatedButton(
+                                                  style: ElevatedButton.styleFrom(
+                                                    shape:
+                                                        const RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius.all(
+                                                                Radius.circular(
+                                                                  4,
+                                                                ),
+                                                              ),
+                                                        ),
+                                                    // backgroundColor: Colors.red.shade700,
+                                                    // foregroundColor: Colors.white,
+                                                  ),
                                                   onPressed: () =>
                                                       Navigator.pop(context),
                                                   child: const Text('Cancel'),
                                                 ),
                                                 ElevatedButton(
+                                                  style: ElevatedButton.styleFrom(
+                                                    shape:
+                                                        const RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius.all(
+                                                                Radius.circular(
+                                                                  4,
+                                                                ),
+                                                              ),
+                                                        ),
+                                                    backgroundColor:
+                                                        Colors.blue.shade700,
+                                                    foregroundColor:
+                                                        Colors.white,
+                                                  ),
                                                   onPressed: () {
                                                     final newName =
                                                         editController.text

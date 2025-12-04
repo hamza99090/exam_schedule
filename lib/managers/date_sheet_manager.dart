@@ -53,7 +53,7 @@ class DateSheetManager extends ChangeNotifier {
     if (_defaultClassSubjects.containsKey(className)) {
       return List<String>.from(_defaultClassSubjects[className]!);
     }
-    return ['English', 'Math', 'Science', 'Social Studies', 'Urdu'];
+    return ['English', 'Math'];
   }
 
   void updateSchoolName(String name) {
