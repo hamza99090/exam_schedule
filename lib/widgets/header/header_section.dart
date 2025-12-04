@@ -60,15 +60,14 @@ class _HeaderSectionState extends State<HeaderSection> {
       elevation: 4,
       child: Padding(
         padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            // -------------------- REQUIRED FIELD --------------------
-            Form(
-              key: widget.formKey,
-              child: TextFormField(
+        child: Form(
+          key: widget.formKey, // ← full form here
+          child: Column(
+            children: [
+              // -------------------- 1. SCHOOL NAME --------------------
+              TextFormField(
                 controller: schoolController,
                 onChanged: (value) {
-                  // Update manager immediately when text changes
                   widget.manager.updateSchoolName(value);
                 },
                 validator: (value) {
@@ -99,65 +98,82 @@ class _HeaderSectionState extends State<HeaderSection> {
                   ),
                 ),
               ),
-            ),
 
-            // ----------------------------------------------------------
-            const SizedBox(height: 12),
+              const SizedBox(height: 12),
 
-            // -------------------- SECOND TEXTFIELD (UNCHANGED) --------------------
-            TextFormField(
-              controller: descriptionController,
-              onChanged: (value) {
-                widget.manager.updateDateSheetDescription(value);
-              },
-              style: TextStyle(
-                fontSize: 14,
-                color: widget.manager.data.dateSheetDescription.isEmpty
-                    ? Colors.grey
-                    : Colors.grey.shade500,
-              ),
-              decoration: InputDecoration(
-                border: const OutlineInputBorder(),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.blue.shade300),
+              // -------------------- 2. DATE SHEET DESCRIPTION --------------------
+              TextFormField(
+                controller: descriptionController,
+                onChanged: (value) {
+                  widget.manager.updateDateSheetDescription(value);
+                },
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return "Description is required";
+                  }
+                  return null;
+                },
+                style: TextStyle(
+                  fontSize: 14,
+                  color: widget.manager.data.dateSheetDescription.isEmpty
+                      ? Colors.grey
+                      : Colors.grey.shade500,
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.blue.shade700),
+                decoration: InputDecoration(
+                  border: const OutlineInputBorder(),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.blue.shade300),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.blue.shade700),
+                  ),
+                  contentPadding: const EdgeInsets.all(12),
+                  hintText: 'Enter Date Sheet Description *',
+                  hintStyle: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade500,
+                  ),
                 ),
-                contentPadding: const EdgeInsets.all(12),
-                hintText: 'Enter Date Sheet Description',
-                hintStyle: TextStyle(fontSize: 14, color: Colors.grey.shade500),
               ),
-            ),
 
-            const SizedBox(height: 8),
+              const SizedBox(height: 8),
 
-            // -------------------- THIRD TEXTFIELD (UNCHANGED) --------------------
-            TextFormField(
-              controller: termController,
-              onChanged: (value) {
-                widget.manager.updateTermDescription(value);
-              },
-              style: TextStyle(
-                fontSize: 14,
-                color: widget.manager.data.termDescription.isEmpty
-                    ? Colors.grey
-                    : Colors.grey.shade500,
-              ),
-              decoration: InputDecoration(
-                border: const OutlineInputBorder(),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.blue.shade300),
+              // -------------------- 3. TERM DESCRIPTION --------------------
+              TextFormField(
+                controller: termController,
+                onChanged: (value) {
+                  widget.manager.updateTermDescription(value);
+                },
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return "Term description is required";
+                  }
+                  return null;
+                },
+                style: TextStyle(
+                  fontSize: 14,
+                  color: widget.manager.data.termDescription.isEmpty
+                      ? Colors.grey
+                      : Colors.grey.shade500,
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.blue.shade700),
+                decoration: InputDecoration(
+                  border: const OutlineInputBorder(),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.blue.shade300),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.blue.shade700),
+                  ),
+                  contentPadding: const EdgeInsets.all(12),
+                  hintText: 'Enter Examination Term Description *',
+                  hintStyle: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade500,
+                  ),
                 ),
-                contentPadding: const EdgeInsets.all(12),
-                hintText: 'Enter Examination Term Description',
-                hintStyle: TextStyle(fontSize: 14, color: Colors.grey.shade500),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
