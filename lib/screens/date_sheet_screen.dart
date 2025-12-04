@@ -106,27 +106,27 @@ class _DateSheetScreenState extends State<DateSheetScreen> {
           backgroundColor: Colors.blue.shade700,
           foregroundColor: Colors.white,
           actions: [
-            IconButton(
-              icon: const Icon(Icons.save),
-              onPressed: () {
-                // validate header
-                if (_headerFormKey.currentState!.validate()) {
-                  _showSaveDialog(); // Only open save dialog if valid
-                } else {
-                  // If header invalid, show error message
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        "Please fill required fields before saving.",
-                      ),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              },
+            // IconButton(
+            //   icon: const Icon(Icons.save),
+            //   onPressed: () {
+            //     // validate header
+            //     if (_headerFormKey.currentState!.validate()) {
+            //       _showSaveDialog(); // Only open save dialog if valid
+            //     } else {
+            //       // If header invalid, show error message
+            //       ScaffoldMessenger.of(context).showSnackBar(
+            //         const SnackBar(
+            //           content: Text(
+            //             "Please fill required fields before saving.",
+            //           ),
+            //           backgroundColor: Colors.red,
+            //         ),
+            //       );
+            //     }
+            //   },
 
-              tooltip: 'Save Date Sheet',
-            ),
+            //   tooltip: 'Save Date Sheet',
+            // ),
             // Saved files button with badge
             Stack(
               children: [
@@ -188,13 +188,45 @@ class _DateSheetScreenState extends State<DateSheetScreen> {
                     const SizedBox(height: 24),
 
                     // "Create Date Sheet" title
-                    Text(
-                      'Create Date Sheet',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue.shade900,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Create Date Sheet',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue.shade900,
+                          ),
+                        ),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            // validate header
+                            if (_headerFormKey.currentState!.validate()) {
+                              _showSaveDialog();
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    "Please fill required fields before saving.",
+                                  ),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.save, size: 20),
+                          label: const Text('Save'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue.shade700,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 16),
 
