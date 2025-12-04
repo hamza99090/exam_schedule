@@ -135,13 +135,26 @@ class _SubjectMultiSelectorState extends State<SubjectMultiSelector> {
                         itemCount: allSubjects.length + 1,
                         itemBuilder: (context, index) {
                           if (index == 0) {
-                            // "—" option
-                            return CheckboxListTile(
+                            // "—" option with checkbox on left
+                            return ListTile(
+                              leading: Checkbox(
+                                value: _selectedSubjects.contains('—'),
+                                onChanged: (bool? value) {
+                                  setDialogState(() {
+                                    if (value == true) {
+                                      _selectedSubjects = ['—'];
+                                    } else {
+                                      _selectedSubjects.remove('—');
+                                    }
+                                  });
+                                },
+                              ),
                               title: const Text('—'),
-                              value: _selectedSubjects.contains('—'),
-                              onChanged: (bool? value) {
+                              onTap: () {
                                 setDialogState(() {
-                                  if (value == true) {
+                                  final currentValue = _selectedSubjects
+                                      .contains('—');
+                                  if (!currentValue) {
                                     _selectedSubjects = ['—'];
                                   } else {
                                     _selectedSubjects.remove('—');
