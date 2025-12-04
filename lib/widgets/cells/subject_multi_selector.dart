@@ -280,7 +280,15 @@ class _SubjectMultiSelectorState extends State<SubjectMultiSelector> {
                 ),
               ),
               actions: [
-                TextButton(
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(4)),
+                    ),
+                    // backgroundColor: Colors.grey.shade300,
+                    // foregroundColor: Colors.black,
+                  ),
+
                   onPressed: () {
                     _customSubjectController.clear();
                     Navigator.of(context).pop();
@@ -288,6 +296,13 @@ class _SubjectMultiSelectorState extends State<SubjectMultiSelector> {
                   child: const Text('Cancel'),
                 ),
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(4)),
+                    ),
+                    backgroundColor: Colors.blue.shade700,
+                    foregroundColor: Colors.white,
+                  ),
                   onPressed: () {
                     setState(() {
                       widget.onSubjectsChanged(_selectedSubjects);

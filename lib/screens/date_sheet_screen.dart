@@ -17,6 +17,7 @@ class DateSheetScreen extends StatefulWidget {
 class _DateSheetScreenState extends State<DateSheetScreen> {
   final ScrollController _scrollController = ScrollController();
   final GlobalKey<FormState> _headerFormKey = GlobalKey<FormState>();
+  bool _hasUnsavedChanges = false;
 
   void _showSaveDialog() {
     showDialog(
@@ -40,11 +41,25 @@ class _DateSheetScreenState extends State<DateSheetScreen> {
             },
           ),
           actions: [
-            TextButton(
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(4)),
+                ),
+                // backgroundColor: Colors.red.shade700,
+                // foregroundColor: Colors.white,
+              ),
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('Cancel'),
             ),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(4)),
+                ),
+                backgroundColor: Colors.blue.shade700,
+                foregroundColor: Colors.white,
+              ),
               onPressed: () {
                 if (fileName.isNotEmpty) {
                   _saveDateSheet(fileName);
@@ -62,6 +77,7 @@ class _DateSheetScreenState extends State<DateSheetScreen> {
   void _saveDateSheet(String fileName) {
     setState(() {
       widget.manager.saveDateSheet(fileName);
+      _hasUnsavedChanges = false; // Reset after saving
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -75,6 +91,7 @@ class _DateSheetScreenState extends State<DateSheetScreen> {
   void _addNewRowAndScroll() {
     setState(() {
       widget.manager.addNewRow();
+      _hasUnsavedChanges = true; // Track changes
     });
 
     // Scroll to bottom after a short delay to allow the UI to update
@@ -87,6 +104,77 @@ class _DateSheetScreenState extends State<DateSheetScreen> {
     });
   }
 
+  // Show the three-button popup when trying to exit
+  Future<bool> _showExitConfirmationDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Unsaved Changes'),
+        content: const Text(
+          'You have unsaved changes. What would you like to do?',
+        ),
+        actions: [
+          // Keep Editing button
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Keep Editing'),
+          ),
+
+          // Save button
+          TextButton(
+            onPressed: () {
+              // Validate header first
+              if (_headerFormKey.currentState!.validate()) {
+                Navigator.pop(context, true); // Close confirmation dialog
+                _showSaveDialog(); // Show save dialog
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Please fill required fields before saving.'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                Navigator.pop(context, false); // Stay on screen
+              }
+            },
+            child: const Text('Save', style: TextStyle(color: Colors.green)),
+          ),
+
+          // Cancel (discard) button
+          // Update the Discard button in the _showExitConfirmationDialog method
+          TextButton(
+            onPressed: () {
+              // Reset the form to empty/default state
+              widget.manager.resetToDefault();
+              _hasUnsavedChanges = false;
+              Navigator.pop(context, true); // Allow navigation
+            },
+            child: const Text('Discard', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    // If result is true, allow navigation (either saved or discarded)
+    // If result is false, stay on screen
+    return result ?? false;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Listen to manager changes to track unsaved changes
+    widget.manager.addListener(() {
+      if (mounted) {
+        setState(() {
+          _hasUnsavedChanges = true;
+        });
+      }
+    });
+  }
+
   @override
   void dispose() {
     _scrollController.dispose();
@@ -95,183 +183,196 @@ class _DateSheetScreenState extends State<DateSheetScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        FocusManager.instance.primaryFocus?.unfocus();
+    return WillPopScope(
+      onWillPop: () async {
+        // Only show dialog if there are unsaved changes
+        if (_hasUnsavedChanges) {
+          return await _showExitConfirmationDialog();
+        }
+        return true; // Allow exit if no unsaved changes
       },
-      behavior: HitTestBehavior.opaque,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Create Date Sheet'),
-          backgroundColor: Colors.blue.shade700,
-          foregroundColor: Colors.white,
-          actions: [
-            // IconButton(
-            //   icon: const Icon(Icons.save),
-            //   onPressed: () {
-            //     // validate header
-            //     if (_headerFormKey.currentState!.validate()) {
-            //       _showSaveDialog(); // Only open save dialog if valid
-            //     } else {
-            //       // If header invalid, show error message
-            //       ScaffoldMessenger.of(context).showSnackBar(
-            //         const SnackBar(
-            //           content: Text(
-            //             "Please fill required fields before saving.",
-            //           ),
-            //           backgroundColor: Colors.red,
-            //         ),
-            //       );
-            //     }
-            //   },
-
-            //   tooltip: 'Save Date Sheet',
-            // ),
-            // Saved files button with badge
-            Stack(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.folder_copy_rounded),
-                  tooltip: "Saved Date Sheets",
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            SavedDateSheetsScreen(manager: widget.manager),
-                      ),
-                    );
-                  },
-                ),
-
-                // Badge
-                if (widget.manager.savedDateSheets.isNotEmpty)
-                  Positioned(
-                    right: 6,
-                    top: 6,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        widget.manager.savedDateSheets.length.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ],
-        ),
-        body: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(16.0),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Header Section
-                    HeaderSection(
-                      manager: widget.manager,
-                      formKey: _headerFormKey,
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // "Create Date Sheet" title
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Create Date Sheet',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue.shade900,
-                          ),
-                        ),
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            // validate header
-                            if (_headerFormKey.currentState!.validate()) {
-                              _showSaveDialog();
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    "Please fill required fields before saving.",
-                                  ),
-                                  backgroundColor: Colors.red,
+      child: GestureDetector(
+        onTap: () {
+          FocusManager.instance.primaryFocus?.unfocus();
+        },
+        behavior: HitTestBehavior.opaque,
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('Create Date Sheet'),
+            backgroundColor: Colors.blue.shade700,
+            foregroundColor: Colors.white,
+            actions: [
+              // Saved files button with badge
+              Stack(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.folder_copy_rounded),
+                    tooltip: "Saved Date Sheets",
+                    onPressed: () {
+                      // Check for unsaved changes before navigating
+                      if (_hasUnsavedChanges) {
+                        _showExitConfirmationDialog().then((allowNavigation) {
+                          if (allowNavigation) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => SavedDateSheetsScreen(
+                                  manager: widget.manager,
                                 ),
-                              );
-                            }
-                          },
-                          icon: const Icon(Icons.save, size: 20),
-                          label: const Text('Save'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue.shade700,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 10,
-                            ),
+                              ),
+                            );
+                          }
+                        });
+                      } else {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                SavedDateSheetsScreen(manager: widget.manager),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
+                        );
+                      }
+                    },
+                  ),
 
-                    // Interactive Table - This grows with rows
-                    InteractiveTable(manager: widget.manager, isEditing: true),
-
-                    // Add New Row Button - Outside the card, moves down as table grows
-                    Padding(
-                      padding: const EdgeInsets.only(top: 16.0),
+                  // Badge
+                  if (widget.manager.savedDateSheets.isNotEmpty)
+                    Positioned(
+                      right: 6,
+                      top: 6,
                       child: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.blue.shade600,
-                              Colors.blue.shade800,
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
                         ),
-                        child: ElevatedButton.icon(
-                          onPressed: _addNewRowAndScroll,
-                          icon: const Icon(Icons.add),
-                          label: const Text('Add New Row'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 16,
-                              horizontal: 32,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 0,
+                        child: Text(
+                          widget.manager.savedDateSheets.length.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
                     ),
-                  ],
-                ),
+                ],
               ),
-            );
-          },
+            ],
+          ),
+          body: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                controller: _scrollController,
+                padding: const EdgeInsets.all(16.0),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Header Section
+                      HeaderSection(
+                        manager: widget.manager,
+                        formKey: _headerFormKey,
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // "Create Date Sheet" title
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Create Date Sheet',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue.shade900,
+                            ),
+                          ),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              // validate header
+                              if (_headerFormKey.currentState!.validate()) {
+                                _showSaveDialog();
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      "Please fill required fields before saving.",
+                                    ),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            },
+                            icon: const Icon(Icons.save, size: 20),
+                            label: const Text('Save'),
+                            style: ElevatedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(4),
+                                ),
+                              ),
+                              backgroundColor: Colors.blue.shade700,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Interactive Table - This grows with rows
+                      InteractiveTable(
+                        manager: widget.manager,
+                        isEditing: true,
+                      ),
+
+                      // Add New Row Button - Outside the card, moves down as table grows
+                      Padding(
+                        padding: const EdgeInsets.only(top: 16.0),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.blue.shade600,
+                                Colors.blue.shade800,
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: ElevatedButton.icon(
+                            onPressed: _addNewRowAndScroll,
+                            icon: const Icon(Icons.add),
+                            label: const Text('Add New Row'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 16,
+                                horizontal: 32,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+
+                              elevation: 0,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
