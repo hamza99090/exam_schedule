@@ -143,7 +143,7 @@ class _InteractiveTableState extends State<InteractiveTable> {
                   if (widget.isEditing)
                     const DataColumn(
                       label: Text(
-                        'ACTION',
+                        'Action',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -151,8 +151,8 @@ class _InteractiveTableState extends State<InteractiveTable> {
                         ),
                       ),
                     ),
-                  const DataColumn(label: Text('DATE')),
-                  const DataColumn(label: Text('DAY')),
+                  const DataColumn(label: Text('Date')),
+                  const DataColumn(label: Text('Day')),
                   ...widget.manager.data.classNames.asMap().entries.map((e) {
                     final index = e.key;
                     return DataColumn(

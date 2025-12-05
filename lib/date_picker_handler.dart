@@ -22,9 +22,15 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
   DateTime? _selectedDate;
 
   @override
-  void initState() {
-    super.initState();
-    _selectedDate = widget.initialDate;
+  void didUpdateWidget(DatePickerHandler oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Update _selectedDate when initialDate changes
+    if (widget.initialDate != oldWidget.initialDate) {
+      setState(() {
+        _selectedDate = widget.initialDate;
+      });
+    }
   }
 
   Future<void> _selectDate() async {
