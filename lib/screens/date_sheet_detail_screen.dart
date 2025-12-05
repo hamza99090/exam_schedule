@@ -414,8 +414,29 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
   }
 
   pw.Widget _buildPDFTable(bool isLandscape) {
-    // Create headers - starting with S.No, Date, Day
-    final headers = ['S.No', 'Date', 'Day', ..._editableDateSheet.classNames];
+    // Filter to only include classes that have at least one subject in any row
+    final classesWithData = <String>{};
+
+    for (var row in _editableDateSheet.tableRows) {
+      for (var className in _editableDateSheet.classNames) {
+        final subjects = row.classSubjects[className];
+        if (subjects != null &&
+            subjects.isNotEmpty &&
+            subjects.any((s) => s.isNotEmpty && s != '—')) {
+          classesWithData.add(className);
+        }
+      }
+    }
+
+    // If no classes have data, use all class names
+    final headers = [
+      'S.No',
+      'Date',
+      'Day',
+      ...(classesWithData.isNotEmpty
+          ? classesWithData.toList()
+          : _editableDateSheet.classNames),
+    ];
 
     final rows = _editableDateSheet.tableRows.asMap().entries.map((entry) {
       final index = entry.key;
@@ -430,8 +451,12 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
         row.day ?? '',
       ];
 
-      // Add data for each class
-      for (var className in _editableDateSheet.classNames) {
+      // Add data only for classes with data (or all classes if none have data)
+      final classesToShow = classesWithData.isNotEmpty
+          ? classesWithData.toList()
+          : _editableDateSheet.classNames;
+
+      for (var className in classesToShow) {
         if (row.classSubjects.containsKey(className)) {
           final subjects = row.classSubjects[className];
           if (subjects != null && subjects.isNotEmpty) {
@@ -448,10 +473,14 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
       return rowData;
     }).toList();
 
-    // Remove empty rows
-    rows.removeWhere((row) => row.skip(1).every((cell) => cell.isEmpty));
+    // Remove empty rows (rows with no data in any class)
+    rows.removeWhere((row) => row.skip(3).every((cell) => cell.isEmpty));
 
-    // Use Table.fromTextArray with default column widths
+    // If after filtering there are no rows, add a placeholder
+    if (rows.isEmpty) {
+      rows.add(['1', '', '', ...List.filled(headers.length - 3, '')]);
+    }
+
     return pw.Table.fromTextArray(
       headers: headers,
       data: rows,
@@ -467,9 +496,8 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
           bottom: pw.BorderSide(color: PdfColors.grey200, width: 0.3),
         ),
       ),
-      // Let the table handle column widths automatically
       columnWidths: {
-        0: const pw.FixedColumnWidth(25), // S.No
+        0: const pw.FixedColumnWidth(28), // S.No
         1: const pw.FixedColumnWidth(65), // Date
         2: const pw.FixedColumnWidth(50), // Day
         // For class columns, let them be flexible
