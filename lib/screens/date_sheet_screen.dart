@@ -292,18 +292,24 @@ class _DateSheetScreenState extends State<DateSheetScreen> {
                           ),
                           ElevatedButton.icon(
                             onPressed: () {
-                              // validate header
-                              if (_headerFormKey.currentState!.validate()) {
-                                _showSaveDialog();
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      "Please fill required fields before saving.",
+                              // If a header Form exists, validate it first. Otherwise proceed.
+                              final formState = _headerFormKey.currentState;
+                              if (formState != null) {
+                                if (formState.validate()) {
+                                  _showSaveDialog();
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        "Please fill required fields before saving.",
+                                      ),
+                                      backgroundColor: Colors.red,
                                     ),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
+                                  );
+                                }
+                              } else {
+                                // No form in header (image-only header), just show save dialog
+                                _showSaveDialog();
                               }
                             },
                             icon: const Icon(Icons.save, size: 20),

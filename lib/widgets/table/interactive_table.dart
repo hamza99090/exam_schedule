@@ -124,39 +124,88 @@ class _InteractiveTableState extends State<InteractiveTable> {
               controller: _horizontalScrollController,
               scrollDirection: Axis.horizontal,
               child: DataTable(
-                headingTextStyle: const TextStyle(
-                  fontWeight: FontWeight.bold,
+                headingTextStyle: TextStyle(
+                  fontWeight: FontWeight.w600,
                   color: Colors.white,
                   fontSize: 12,
                 ),
                 headingRowColor: MaterialStateProperty.all(
-                  Colors.blue.shade700,
+                  Colors.blue.shade600, // Slightly lighter blue than current
                 ),
-                dataTextStyle: const TextStyle(fontSize: 11),
-                columnSpacing: 15, // Reduced from default (56.0) to 15
-                dataRowMinHeight: 40, // Reduced row height
-                dataRowMaxHeight: 50,
-                horizontalMargin:
-                    10, // ← ADD THIS LINE - removes left/right padding
+                headingRowHeight: 42,
+                dataTextStyle: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey.shade800,
+                  fontWeight: FontWeight.w500,
+                ),
+                columnSpacing: 14,
+                dataRowMinHeight: 42,
+                dataRowMaxHeight: 52,
+                horizontalMargin: 10,
+                dividerThickness: 0.3,
+                // Add subtle horizontal dividers
+                border: TableBorder(
+                  horizontalInside: BorderSide(
+                    color: Colors.grey.shade200,
+                    width: 0.3,
+                  ),
+                  verticalInside: BorderSide(
+                    color: Colors.grey.shade200,
+                    width: 0.3,
+                  ),
+                ), // ← ADD THIS LINE - removes left/right padding
                 columns: [
                   // Add Actions column for delete buttons - NOW FIRST
                   if (widget.isEditing)
-                    const DataColumn(
-                      label: Text(
-                        'Action',
+                    DataColumn(
+                      label: SizedBox(
+                        width: 40,
+                        child: Text(
+                          'Action',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontSize: 12,
+                          ),
+                          textAlign: TextAlign.left,
+                        ),
+                      ),
+                    ),
+                  DataColumn(
+                    label: SizedBox(
+                      width: 80, // Set fixed width for Date column
+                      child: Text(
+                        'Date',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                           fontSize: 12,
                         ),
+                        textAlign: TextAlign.left,
                       ),
                     ),
-                  const DataColumn(label: Text('Date')),
-                  const DataColumn(label: Text('Day')),
+                  ),
+                  DataColumn(
+                    label: SizedBox(
+                      width: 60, // Set fixed width for Day column
+                      child: Text(
+                        'Day',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          fontSize: 12,
+                        ),
+                        textAlign: TextAlign.left,
+                      ),
+                    ),
+                  ),
                   ...widget.manager.data.classNames.asMap().entries.map((e) {
                     final index = e.key;
                     return DataColumn(
-                      label: _buildClassNameEditor(index, e.value),
+                      label: SizedBox(
+                        width: 100, // Fixed width for all class columns
+                        child: _buildClassNameEditor(index, e.value),
+                      ),
                     );
                   }).toList(),
                 ],
@@ -222,39 +271,34 @@ class _InteractiveTableState extends State<InteractiveTable> {
       _classControllers.add(TextEditingController(text: currentName));
     }
 
-    return Container(
-      width: 100,
-      child: Stack(
-        alignment: Alignment.centerRight,
-        children: [
-          TextFormField(
-            controller: _classControllers[index],
-            enabled: widget.isEditing,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              fontSize: 12,
-            ),
-            textAlign: TextAlign.center,
-            autofocus: false,
-            readOnly: true, // Make it read-only, will handle tap separately
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 24),
-            ),
-            onTap: () {
-              _showClassSelectionPopup(index);
-            },
+    return MouseRegion(
+      cursor: widget.isEditing
+          ? SystemMouseCursors.click
+          : SystemMouseCursors.basic,
+      child: GestureDetector(
+        onTap: widget.isEditing ? () => _showClassSelectionPopup(index) : null,
+        child: Container(
+          padding: EdgeInsets.zero,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  currentName,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontSize: 12,
+                  ),
+                  textAlign: TextAlign.left,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (widget.isEditing)
+                Icon(Icons.edit, size: 14, color: Colors.white70),
+            ],
           ),
-
-          // Star Icon (on the left)
-
-          // Edit Icon (on the right)
-          Positioned(
-            right: 4,
-            child: Icon(Icons.edit, size: 14, color: Colors.white70),
-          ),
-        ],
+        ),
       ),
     );
   }

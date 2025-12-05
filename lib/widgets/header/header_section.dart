@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../managers/date_sheet_manager.dart';
 
 class HeaderSection extends StatefulWidget {
@@ -15,43 +18,64 @@ class HeaderSection extends StatefulWidget {
 }
 
 class _HeaderSectionState extends State<HeaderSection> {
-  final _formKey = GlobalKey<FormState>();
-
-  late TextEditingController schoolController;
-  late TextEditingController descriptionController;
-  late TextEditingController termController;
+  String? _imagePath;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
-
-    schoolController = TextEditingController(
-      text: widget.manager.data.schoolName,
-    );
-    descriptionController = TextEditingController(
-      text: widget.manager.data.dateSheetDescription,
-    );
-    termController = TextEditingController(
-      text: widget.manager.data.termDescription,
-    );
-
-    // Listen for changes in manager (e.g., after saving)
-    widget.manager.addListener(_updateControllers);
+    _imagePath = widget.manager.logoPath;
+    widget.manager.addListener(_onManagerUpdated);
   }
 
-  void _updateControllers() {
-    schoolController.text = widget.manager.data.schoolName;
-    descriptionController.text = widget.manager.data.dateSheetDescription;
-    termController.text = widget.manager.data.termDescription;
+  void _onManagerUpdated() {
+    if (mounted) {
+      setState(() {
+        _imagePath = widget.manager.logoPath;
+      });
+    }
   }
 
   @override
   void dispose() {
-    widget.manager.removeListener(_updateControllers); // remove listener
-    schoolController.dispose();
-    descriptionController.dispose();
-    termController.dispose();
+    widget.manager.removeListener(_onManagerUpdated);
     super.dispose();
+  }
+
+  Future<void> _pickFromGallery() async {
+    try {
+      final XFile? picked = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1200,
+        maxHeight: 1200,
+        imageQuality: 85,
+      );
+      if (picked != null) {
+        widget.manager.updateLogoPath(picked.path);
+      }
+    } catch (e) {
+      debugPrint('Gallery pick error: $e');
+    }
+  }
+
+  Future<void> _pickFromCamera() async {
+    try {
+      final XFile? picked = await _picker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: 1200,
+        maxHeight: 1200,
+        imageQuality: 85,
+      );
+      if (picked != null) {
+        widget.manager.updateLogoPath(picked.path);
+      }
+    } catch (e) {
+      debugPrint('Camera pick error: $e');
+    }
+  }
+
+  void _removeImage() {
+    widget.manager.updateLogoPath(null);
   }
 
   @override
@@ -60,120 +84,101 @@ class _HeaderSectionState extends State<HeaderSection> {
       elevation: 4,
       child: Padding(
         padding: const EdgeInsets.all(20.0),
-        child: Form(
-          key: widget.formKey, // ← full form here
-          child: Column(
-            children: [
-              // -------------------- 1. SCHOOL NAME --------------------
-              TextFormField(
-                controller: schoolController,
-                onChanged: (value) {
-                  widget.manager.updateSchoolName(value);
-                },
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return "School name is required";
-                  }
-                  return null;
-                },
-                style: TextStyle(
-                  fontSize: 14,
-                  color: widget.manager.data.schoolName.isEmpty
-                      ? Colors.grey
-                      : Colors.grey.shade500,
-                ),
-                decoration: InputDecoration(
-                  border: const OutlineInputBorder(),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.blue.shade300),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.blue.shade700),
-                  ),
-                  contentPadding: const EdgeInsets.all(12),
-                  hintText: 'Enter Your School Name *',
-                  hintStyle: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade500,
-                  ),
-                ),
+        child: Column(
+          children: [
+            // ADD THIS TEXT/LABEL
+            Text(
+              'Upload Image',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.blue.shade800,
               ),
-
-              const SizedBox(height: 12),
-
-              // -------------------- 2. DATE SHEET DESCRIPTION --------------------
-              TextFormField(
-                controller: descriptionController,
-                onChanged: (value) {
-                  widget.manager.updateDateSheetDescription(value);
-                },
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return "Description is required";
-                  }
-                  return null;
-                },
-                style: TextStyle(
-                  fontSize: 14,
-                  color: widget.manager.data.dateSheetDescription.isEmpty
-                      ? Colors.grey
-                      : Colors.grey.shade500,
-                ),
-                decoration: InputDecoration(
-                  border: const OutlineInputBorder(),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.blue.shade300),
+            ),
+            const SizedBox(height: 16), // Add spacing
+            Center(
+              child: Column(
+                children: [
+                  CircleAvatar(
+                    radius: 48,
+                    backgroundColor: Colors.grey.shade200,
+                    backgroundImage:
+                        (_imagePath != null && _imagePath!.isNotEmpty)
+                        ? FileImage(File(_imagePath!)) as ImageProvider
+                        : null,
+                    child: (_imagePath == null || _imagePath!.isEmpty)
+                        ? Icon(
+                            Icons.add_photo_alternate_sharp,
+                            size: 48,
+                            color: Colors.grey.shade600,
+                          )
+                        : null,
                   ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.blue.shade700),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: _pickFromGallery,
+                        icon: const Icon(Icons.photo_library, size: 18),
+                        label: const Text('Gallery'),
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(4)),
+                          ),
+                          backgroundColor: Colors.blue.shade700,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                        ),
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: _pickFromCamera,
+                        icon: const Icon(Icons.camera_alt, size: 18),
+                        label: const Text('Camera'),
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(4)),
+                          ),
+                          backgroundColor: Colors.blue.shade700,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                        ),
+                      ),
+                      if (_imagePath != null && _imagePath!.isNotEmpty)
+                        OutlinedButton.icon(
+                          onPressed: _removeImage,
+                          icon: const Icon(Icons.delete_outline, size: 18),
+                          label: const Text('Remove'),
+                          style: OutlinedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(4),
+                              ),
+                            ),
+                            backgroundColor: Colors.blue.shade700,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
-                  contentPadding: const EdgeInsets.all(12),
-                  hintText: 'Enter Date Sheet Description *',
-                  hintStyle: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade500,
-                  ),
-                ),
+                ],
               ),
-
-              const SizedBox(height: 8),
-
-              // -------------------- 3. TERM DESCRIPTION --------------------
-              TextFormField(
-                controller: termController,
-                onChanged: (value) {
-                  widget.manager.updateTermDescription(value);
-                },
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return "Term description is required";
-                  }
-                  return null;
-                },
-                style: TextStyle(
-                  fontSize: 14,
-                  color: widget.manager.data.termDescription.isEmpty
-                      ? Colors.grey
-                      : Colors.grey.shade500,
-                ),
-                decoration: InputDecoration(
-                  border: const OutlineInputBorder(),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.blue.shade300),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.blue.shade700),
-                  ),
-                  contentPadding: const EdgeInsets.all(12),
-                  hintText: 'Enter Examination Term Description *',
-                  hintStyle: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade500,
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 16),
+            // No text fields here by design — header now contains only the image picker UI.
+          ],
         ),
       ),
     );

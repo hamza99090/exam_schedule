@@ -33,6 +33,12 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
     }
   }
 
+  @override
+  void initState() {
+    super.initState();
+    _selectedDate = widget.initialDate;
+  }
+
   Future<void> _selectDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,

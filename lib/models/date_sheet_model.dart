@@ -25,6 +25,8 @@ class DateSheetData {
 
   @HiveField(6)
   List<String> classNames;
+  @HiveField(7) // Add this - new field for logo
+  String? logoPath; // Make it nullable since logo is optional
 
   DateSheetData({
     this.schoolName = '',
@@ -34,6 +36,7 @@ class DateSheetData {
     this.fileName = '',
     DateTime? createdAt,
     List<String>? classNames,
+    this.logoPath, // Add to constructor
   }) : tableRows = tableRows ?? [TableRowData()],
        createdAt = createdAt ?? DateTime.now(),
        classNames = classNames ?? defaultClassNames;
@@ -62,6 +65,7 @@ class DateSheetData {
     String? fileName,
     DateTime? createdAt,
     List<String>? classNames,
+    String? logoPath, // Add this
   }) {
     return DateSheetData(
       schoolName: schoolName ?? this.schoolName,
@@ -75,6 +79,7 @@ class DateSheetData {
       classNames: classNames != null
           ? List<String>.from(classNames)
           : List<String>.from(this.classNames),
+      logoPath: logoPath ?? this.logoPath, // Add this
     );
   }
 
@@ -88,6 +93,7 @@ class DateSheetData {
       'fileName': fileName,
       'createdAt': createdAt.toIso8601String(),
       'classNames': classNames,
+      'logoPath': logoPath, // Add this
     };
   }
 
@@ -108,6 +114,7 @@ class DateSheetData {
       classNames:
           (map['classNames'] as List<dynamic>?)?.cast<String>() ??
           defaultClassNames,
+      logoPath: map['logoPath'], // Add this
     );
   }
 }

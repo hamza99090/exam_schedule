@@ -334,33 +334,44 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
   Future<Uint8List> _generatePDFBytes() async {
     final pdf = pw.Document();
 
-    final totalColumns =
-        _editableDateSheet.classNames.length + 3; // S.No, Date, Day + classes
+    final totalColumns = _editableDateSheet.classNames.length + 3;
     final shouldUseLandscape = totalColumns > 10;
 
     final pageFormat = shouldUseLandscape
-        ? PdfPageFormat
-              .a4
-              .landscape // Use landscape for many columns
-        : PdfPageFormat.a4; // Use portrait for few columns
+        ? PdfPageFormat.a4.landscape
+        : PdfPageFormat.a4;
+
+    // Get logo bytes if available
+    final Uint8List? logoBytes = await _getLogoBytes();
 
     pdf.addPage(
       pw.MultiPage(
-        pageFormat: pageFormat, // Use dynamic page format
+        pageFormat: pageFormat,
         margin: const pw.EdgeInsets.all(20),
         build: (pw.Context context) {
           return [
-            // Header Section
-            pw.Header(
-              level: 0,
-              child: pw.Text(
-                _editableDateSheet.schoolName,
-                style: pw.TextStyle(
-                  fontSize: shouldUseLandscape ? 22 : 24,
-                  fontWeight: pw.FontWeight.bold,
+            // Logo and School Name in a Row
+            if (logoBytes != null)
+              pw.Center(
+                child: pw.Container(
+                  width: 60,
+                  height: 60,
+                  margin: const pw.EdgeInsets.only(bottom: 15),
+                  child: pw.Image(
+                    pw.MemoryImage(logoBytes),
+                    fit: pw.BoxFit.contain,
+                  ),
                 ),
-                textAlign: pw.TextAlign.center,
               ),
+
+            // School Name
+            pw.Text(
+              _editableDateSheet.schoolName,
+              style: pw.TextStyle(
+                fontSize: shouldUseLandscape ? 22 : 24,
+                fontWeight: pw.FontWeight.bold,
+              ),
+              textAlign: pw.TextAlign.center,
             ),
 
             pw.SizedBox(height: 10),
@@ -411,6 +422,35 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
     );
 
     return await pdf.save();
+  }
+
+  // Add this helper method
+  Future<Uint8List?> _getLogoBytes() async {
+    try {
+      // Check if logoPath exists and is not empty
+      if (_editableDateSheet.logoPath != null &&
+          _editableDateSheet.logoPath!.isNotEmpty) {
+        final file = File(_editableDateSheet.logoPath!);
+
+        // Check if file exists
+        if (await file.exists()) {
+          final bytes = await file.readAsBytes();
+
+          // Debug log
+          print('✅ Logo loaded for PDF: ${bytes.length} bytes');
+
+          return bytes;
+        } else {
+          print('❌ Logo file does not exist: ${_editableDateSheet.logoPath}');
+        }
+      } else {
+        print('ℹ️ No logo path available for PDF');
+      }
+    } catch (e) {
+      print('❌ Error reading logo file: $e');
+    }
+
+    return null;
   }
 
   pw.Widget _buildPDFTable(bool isLandscape) {
@@ -572,90 +612,109 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
+            // ADD LOGO HERE
+            if (_editableDateSheet.logoPath != null &&
+                _editableDateSheet.logoPath!.isNotEmpty)
+              Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                child: CircleAvatar(
+                  radius: 40,
+                  backgroundColor: Colors.grey.shade200,
+                  backgroundImage: FileImage(
+                    File(_editableDateSheet.logoPath!),
+                  ),
+                ),
+              ),
+
             // School Name - Only editable when in edit mode
-            _isEditing
-                ? TextFormField(
-                    initialValue: _editableDateSheet.schoolName,
-                    onChanged: (value) {
-                      setState(() {
-                        _editableDateSheet.schoolName = value;
-                        _tempManager.updateSchoolName(value);
-                      });
-                    },
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue.shade800,
-                    ),
-                    textAlign: TextAlign.center,
-                    decoration: const InputDecoration(
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                  )
-                : Text(
-                    _editableDateSheet.schoolName,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue.shade800,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-            const SizedBox(height: 12),
-            // Date Sheet Description - Only editable when in edit mode
-            _isEditing
-                ? TextFormField(
-                    initialValue: _editableDateSheet.dateSheetDescription,
-                    onChanged: (value) {
-                      setState(() {
-                        _editableDateSheet.dateSheetDescription =
-                            value; // ← FIXED
-                        _tempManager.updateDateSheetDescription(value);
-                      });
-                    },
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    textAlign: TextAlign.center,
-                    decoration: const InputDecoration(
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                  )
-                : Text(
-                    _editableDateSheet.dateSheetDescription,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-            const SizedBox(height: 8),
-            // Term Description - Only editable when in edit mode
-            _isEditing
-                ? TextFormField(
-                    initialValue: _editableDateSheet.termDescription,
-                    onChanged: (value) {
-                      setState(() {
-                        _editableDateSheet.termDescription = value; // ← FIXED
-                        _tempManager.updateTermDescription(value);
-                      });
-                    },
-                    style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
-                    textAlign: TextAlign.center,
-                    decoration: const InputDecoration(
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                  )
-                : Text(
-                    _editableDateSheet.termDescription,
-                    style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
-                    textAlign: TextAlign.center,
-                  ),
-            const SizedBox(height: 16),
+            // _isEditing
+            //     ? TextFormField(
+            //         initialValue: _editableDateSheet.schoolName,
+            //         onChanged: (value) {
+            //           setState(() {
+            //             _editableDateSheet.schoolName = value;
+            //             _tempManager.updateSchoolName(value);
+            //           });
+            //         },
+            //         style: TextStyle(
+            //           fontSize: 20,
+            //           fontWeight: FontWeight.bold,
+            //           color: Colors.blue.shade800,
+            //         ),
+            //         textAlign: TextAlign.center,
+            //         decoration: const InputDecoration(
+            //           border: InputBorder.none,
+            //           contentPadding: EdgeInsets.zero,
+            //         ),
+            //       )
+            //     : Text(
+            //         _editableDateSheet.schoolName,
+            //         style: TextStyle(
+            //           fontSize: 20,
+            //           fontWeight: FontWeight.bold,
+            //           color: Colors.blue.shade800,
+            //         ),
+            //         textAlign: TextAlign.center,
+            //       ),
+
+            // const SizedBox(height: 12),
+
+            // // Rest of your existing code...
+            // // Date Sheet Description
+            // _isEditing
+            //     ? TextFormField(
+            //         initialValue: _editableDateSheet.dateSheetDescription,
+            //         onChanged: (value) {
+            //           setState(() {
+            //             _editableDateSheet.dateSheetDescription = value;
+            //             _tempManager.updateDateSheetDescription(value);
+            //           });
+            //         },
+            //         style: const TextStyle(
+            //           fontSize: 16,
+            //           fontWeight: FontWeight.w600,
+            //         ),
+            //         textAlign: TextAlign.center,
+            //         decoration: const InputDecoration(
+            //           border: InputBorder.none,
+            //           contentPadding: EdgeInsets.zero,
+            //         ),
+            //       )
+            //     : Text(
+            //         _editableDateSheet.dateSheetDescription,
+            //         style: const TextStyle(
+            //           fontSize: 16,
+            //           fontWeight: FontWeight.w600,
+            //         ),
+            //         textAlign: TextAlign.center,
+            //       ),
+
+            // const SizedBox(height: 8),
+
+            // // Term Description
+            // _isEditing
+            //     ? TextFormField(
+            //         initialValue: _editableDateSheet.termDescription,
+            //         onChanged: (value) {
+            //           setState(() {
+            //             _editableDateSheet.termDescription = value;
+            //             _tempManager.updateTermDescription(value);
+            //           });
+            //         },
+            //         style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
+            //         textAlign: TextAlign.center,
+            //         decoration: const InputDecoration(
+            //           border: InputBorder.none,
+            //           contentPadding: EdgeInsets.zero,
+            //         ),
+            //       )
+            //     : Text(
+            //         _editableDateSheet.termDescription,
+            //         style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
+            //         textAlign: TextAlign.center,
+            //       ),
+
+            // const SizedBox(height: 16),
             Text(
               '${_isEditing ? 'Editing' : 'Saved'} on: ${_formatDate(_editableDateSheet.createdAt)}',
               style: TextStyle(

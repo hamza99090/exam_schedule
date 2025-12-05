@@ -10,6 +10,9 @@ class DateSheetManager extends ChangeNotifier {
 
   // Getter for starred class names
   List<String> get starredClassNames => List.from(_starredClassNames);
+  // In-memory logo path for header image (not persisted in Hive)
+  String? _logoPath;
+  String? get logoPath => _logoPath;
 
   DateSheetManager() {
     _initHiveBox();
@@ -188,7 +191,8 @@ class DateSheetManager extends ChangeNotifier {
       createdAt: DateTime.now(),
       classNames: initialClassNames,
     );
-
+    // Also reset logo path
+    _logoPath = null; // ADD THIS LINE
     notifyListeners();
   }
 
@@ -203,6 +207,7 @@ class DateSheetManager extends ChangeNotifier {
       fileName: fileName,
       createdAt: DateTime.now(),
       classNames: List<String>.from(_data.classNames),
+      logoPath: _logoPath, // ADD THIS LINE - include the logo!
     );
 
     // Add to Hive box
@@ -215,6 +220,7 @@ class DateSheetManager extends ChangeNotifier {
   // Load a saved date sheet
   void loadDateSheet(DateSheetData dateSheet) {
     _data = dateSheet.copyWith();
+    _logoPath = dateSheet.logoPath; // ADD THIS LINE - load the logo
     notifyListeners();
   }
 
@@ -247,6 +253,15 @@ class DateSheetManager extends ChangeNotifier {
   // Setter for data
   set data(DateSheetData newData) {
     _data = newData;
+    _logoPath = newData.logoPath; // Sync the logo path
+    notifyListeners();
+  }
+
+  // Update logo path should also update the data
+  void updateLogoPath(String? path) {
+    _logoPath = path;
+    // Also update the current data object
+    _data = _data.copyWith(logoPath: path);
     notifyListeners();
   }
 }
