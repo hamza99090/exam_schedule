@@ -597,7 +597,7 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
       floatingActionButton: _isEditing
           ? FloatingActionButton(
               onPressed: _saveChanges,
-              backgroundColor: Colors.green,
+              backgroundColor: Colors.blue.shade700,
               child: const Icon(Icons.save, color: Colors.white),
             )
           : null,
@@ -739,14 +739,30 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
 
   Widget _buildAddRowButton() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: ElevatedButton.icon(
-        onPressed: _addNewRow,
-        icon: const Icon(Icons.add),
-        label: const Text('Add New Row'),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blue.shade600,
-          foregroundColor: Colors.white,
+      padding: const EdgeInsets.only(top: 16.0),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blue.shade600, Colors.blue.shade800],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: ElevatedButton.icon(
+          onPressed: _addNewRow,
+          icon: const Icon(Icons.add),
+          label: const Text('Add New Row'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 120),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+
+            elevation: 0,
+          ),
         ),
       ),
     );
