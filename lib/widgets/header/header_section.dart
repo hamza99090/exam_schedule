@@ -88,7 +88,7 @@ class _HeaderSectionState extends State<HeaderSection> {
           children: [
             // ADD THIS TEXT/LABEL
             Text(
-              'Upload Image',
+              'Upload Logo here',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -122,7 +122,7 @@ class _HeaderSectionState extends State<HeaderSection> {
                     children: [
                       ElevatedButton.icon(
                         onPressed: _pickFromGallery,
-                        icon: const Icon(Icons.photo_library, size: 18),
+                        icon: const Icon(Icons.photo_library, size: 20),
                         label: const Text('Gallery'),
                         style: ElevatedButton.styleFrom(
                           shape: RoundedRectangleBorder(
@@ -130,15 +130,15 @@ class _HeaderSectionState extends State<HeaderSection> {
                           ),
                           backgroundColor: Colors.blue.shade700,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 10,
-                          ),
+                          // padding: const EdgeInsets.symmetric(
+                          //   horizontal: 16,
+                          //   vertical: 10,
+                          // ),
                         ),
                       ),
                       ElevatedButton.icon(
                         onPressed: _pickFromCamera,
-                        icon: const Icon(Icons.camera_alt, size: 18),
+                        icon: const Icon(Icons.camera_alt, size: 20),
                         label: const Text('Camera'),
                         style: ElevatedButton.styleFrom(
                           shape: RoundedRectangleBorder(
@@ -146,16 +146,16 @@ class _HeaderSectionState extends State<HeaderSection> {
                           ),
                           backgroundColor: Colors.blue.shade700,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 10,
-                          ),
+                          // padding: const EdgeInsets.symmetric(
+                          //   horizontal: 16,
+                          //   vertical: 10,
+                          // ),
                         ),
                       ),
                       if (_imagePath != null && _imagePath!.isNotEmpty)
                         OutlinedButton.icon(
                           onPressed: _removeImage,
-                          icon: const Icon(Icons.delete_outline, size: 18),
+                          icon: const Icon(Icons.delete_outline, size: 20),
                           label: const Text('Remove'),
                           style: OutlinedButton.styleFrom(
                             shape: RoundedRectangleBorder(
@@ -165,10 +165,10 @@ class _HeaderSectionState extends State<HeaderSection> {
                             ),
                             backgroundColor: Colors.blue.shade700,
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 10,
-                            ),
+                            // padding: const EdgeInsets.symmetric(
+                            //   horizontal: 16,
+                            //   vertical: 10,
+                            // ),
                           ),
                         ),
                     ],
