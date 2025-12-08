@@ -73,7 +73,7 @@ class _SavedDateSheetsScreenState extends State<SavedDateSheetsScreen> {
     return Card(
       margin: const EdgeInsets.all(8.0),
       child: ListTile(
-        leading: const Icon(Icons.assignment, color: Colors.blue),
+        // leading: const Icon(Icons.assignment, color: Colors.blue),
         title: Text(
           dateSheet.fileName,
           style: const TextStyle(fontWeight: FontWeight.bold),
@@ -81,7 +81,6 @@ class _SavedDateSheetsScreenState extends State<SavedDateSheetsScreen> {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(dateSheet.schoolName),
             Text(
               'Created: ${_formatDate(dateSheet.createdAt)}',
               style: const TextStyle(fontSize: 12, color: Colors.grey),
@@ -95,15 +94,30 @@ class _SavedDateSheetsScreenState extends State<SavedDateSheetsScreen> {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            IconButton(
-              icon: const Icon(Icons.visibility, color: Colors.blue),
-              onPressed: () => _viewDateSheet(context, dateSheet),
-              tooltip: 'View Date Sheet',
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete, color: Colors.red),
-              onPressed: () => _deleteDateSheet(context, index),
-              tooltip: 'Delete Date Sheet',
+            PopupMenuButton<String>(
+              icon: Icon(
+                Icons.more_vert,
+                color: Colors.grey.shade600,
+                size: 20,
+              ),
+              onSelected: (value) {
+                if (value == 'delete') {
+                  _deleteDateSheet(context, index);
+                }
+              },
+              itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                PopupMenuItem<String>(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete_outline),
+                      SizedBox(width: 12),
+                      Text('Delete'),
+                    ],
+                  ),
+                ),
+              ],
+              padding: EdgeInsets.all(4), // Adjust padding as needed
             ),
           ],
         ),
