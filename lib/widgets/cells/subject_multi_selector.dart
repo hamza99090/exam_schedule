@@ -47,7 +47,7 @@ class _SubjectMultiSelectorState extends State<SubjectMultiSelector> {
     _customSubjects = _selectedSubjects
         .where(
           (subject) =>
-              subject != '—' && !widget.availableSubjects.contains(subject),
+              subject != '-' && !widget.availableSubjects.contains(subject),
         )
         .toList();
   }
@@ -65,7 +65,7 @@ class _SubjectMultiSelectorState extends State<SubjectMultiSelector> {
         _customSubjects = _selectedSubjects
             .where(
               (subject) =>
-                  subject != '—' && !widget.availableSubjects.contains(subject),
+                  subject != '-' && !widget.availableSubjects.contains(subject),
             )
             .toList();
       });
@@ -138,26 +138,26 @@ class _SubjectMultiSelectorState extends State<SubjectMultiSelector> {
                             // "—" option with checkbox on left
                             return ListTile(
                               leading: Checkbox(
-                                value: _selectedSubjects.contains('—'),
+                                value: _selectedSubjects.contains('-'),
                                 onChanged: (bool? value) {
                                   setDialogState(() {
                                     if (value == true) {
-                                      _selectedSubjects = ['—'];
+                                      _selectedSubjects = ['-'];
                                     } else {
-                                      _selectedSubjects.remove('—');
+                                      _selectedSubjects.remove('-');
                                     }
                                   });
                                 },
                               ),
-                              title: const Text('—'),
+                              title: const Text('-'),
                               onTap: () {
                                 setDialogState(() {
                                   final currentValue = _selectedSubjects
-                                      .contains('—');
+                                      .contains('-');
                                   if (!currentValue) {
-                                    _selectedSubjects = ['—'];
+                                    _selectedSubjects = ['-'];
                                   } else {
-                                    _selectedSubjects.remove('—');
+                                    _selectedSubjects.remove('-');
                                   }
                                 });
                               },
@@ -175,7 +175,7 @@ class _SubjectMultiSelectorState extends State<SubjectMultiSelector> {
                               onChanged: (bool? value) {
                                 setDialogState(() {
                                   if (value == true) {
-                                    _selectedSubjects.remove('—');
+                                    _selectedSubjects.remove('-');
                                     _selectedSubjects.add(subject);
                                   } else {
                                     _selectedSubjects.remove(subject);
@@ -356,7 +356,7 @@ class _SubjectMultiSelectorState extends State<SubjectMultiSelector> {
     if (subject.isNotEmpty && !_customSubjects.contains(subject)) {
       setDialogState(() {
         _customSubjects.add(subject);
-        _selectedSubjects.remove('—');
+        _selectedSubjects.remove('-');
         if (!_selectedSubjects.contains(subject)) {
           _selectedSubjects.add(subject);
         }
@@ -367,10 +367,10 @@ class _SubjectMultiSelectorState extends State<SubjectMultiSelector> {
 
   String _getDisplayText() {
     if (_selectedSubjects.isEmpty) return 'Add Subjects';
-    if (_selectedSubjects.contains('—') && _selectedSubjects.length == 1)
-      return '—';
+    if (_selectedSubjects.contains('-') && _selectedSubjects.length == 1)
+      return '-';
     final subjectsToShow = _selectedSubjects
-        .where((subject) => subject != '—')
+        .where((subject) => subject != '-')
         .toList();
 
     if (subjectsToShow.length <= 2) {

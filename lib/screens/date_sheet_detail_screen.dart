@@ -410,12 +410,12 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
 
             pw.SizedBox(height: 30),
 
-            // Footer
-            pw.Text(
-              'Official document - ${_editableDateSheet.schoolName}',
-              style: pw.TextStyle(fontSize: 9, fontStyle: pw.FontStyle.italic),
-              textAlign: pw.TextAlign.center,
-            ),
+            // // Footer
+            // pw.Text(
+            //   'Official document - ${_editableDateSheet.schoolName}',
+            //   style: pw.TextStyle(fontSize: 9, fontStyle: pw.FontStyle.italic),
+            //   textAlign: pw.TextAlign.center,
+            // ),
           ];
         },
       ),
@@ -462,7 +462,7 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
         final subjects = row.classSubjects[className];
         if (subjects != null &&
             subjects.isNotEmpty &&
-            subjects.any((s) => s.isNotEmpty && s != '—')) {
+            subjects.any((s) => s.isNotEmpty && s != '-')) {
           classesWithData.add(className);
         }
       }
