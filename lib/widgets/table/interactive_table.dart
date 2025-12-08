@@ -236,10 +236,7 @@ class _InteractiveTableState extends State<InteractiveTable> {
                                       value: 'delete',
                                       child: Row(
                                         children: [
-                                          Icon(
-                                            Icons.delete_outline,
-                                            color: Colors.red.shade600,
-                                          ),
+                                          Icon(Icons.delete_outline),
                                           SizedBox(width: 12),
                                           Text('Delete'),
                                         ],

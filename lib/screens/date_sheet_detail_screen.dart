@@ -558,9 +558,13 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_editableDateSheet.fileName),
+        title: Text(
+          _editableDateSheet.fileName,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.blue.shade700,
         foregroundColor: Colors.white,
+
         actions: [
           // Add Download button here (first in the list)
           if (!_isEditing)

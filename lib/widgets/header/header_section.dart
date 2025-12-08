@@ -90,7 +90,7 @@ class _HeaderSectionState extends State<HeaderSection> {
             Text(
               'Upload Logo here',
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: Colors.blue.shade800,
               ),
