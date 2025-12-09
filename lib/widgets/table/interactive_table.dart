@@ -8,11 +8,12 @@ import '../cells/subject_multi_selector.dart';
 class InteractiveTable extends StatefulWidget {
   final DateSheetManager manager;
   final bool isEditing;
-
+  final Map<String, List<String>>? alreadySelectedSubjectsMap; // ← ADD THIS
   const InteractiveTable({
     super.key,
     required this.manager,
     this.isEditing = true,
+    this.alreadySelectedSubjectsMap, // ← ADD THIS
   });
 
   @override
@@ -336,10 +337,21 @@ class _InteractiveTableState extends State<InteractiveTable> {
     );
   }
 
-  List<DataCell> _buildClassCells(int index, TableRowData rowData) {
+  List<DataCell> _buildClassCells(int rowIndex, TableRowData rowData) {
     return widget.manager.data.classNames.asMap().entries.map((entry) {
       final classIndex = entry.key;
       final classNum = entry.value;
+
+      // Get all subjects already selected for this class in OTHER rows
+      List<String> alreadySelectedSubjects = [];
+      for (int i = 0; i < widget.manager.data.tableRows.length; i++) {
+        if (i != rowIndex) {
+          // Skip current row
+          final otherRow = widget.manager.data.tableRows[i];
+          final subjects = otherRow.classSubjects[classNum] ?? [];
+          alreadySelectedSubjects.addAll(subjects);
+        }
+      }
       return DataCell(
         SizedBox(
           width: 100,
@@ -347,8 +359,9 @@ class _InteractiveTableState extends State<InteractiveTable> {
             classNumber: classNum,
             availableSubjects: widget.manager.getSubjectsForClass(classNum),
             selectedSubjects: rowData.classSubjects[classNum] ?? [],
+            alreadySelectedSubjects: alreadySelectedSubjects, // ← NEW PARAMETER
             onSubjectsChanged: (subjects) {
-              widget.manager.updateClassSubjects(index, classNum, subjects);
+              widget.manager.updateClassSubjects(rowIndex, classNum, subjects);
             },
             enabled: widget.isEditing,
           ),

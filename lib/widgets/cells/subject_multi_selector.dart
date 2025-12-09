@@ -5,6 +5,7 @@ class SubjectMultiSelector extends StatefulWidget {
   final String classNumber;
   final List<String> availableSubjects; // NEW PARAMETER
   final List<String> selectedSubjects;
+  final List<String> alreadySelectedSubjects; // ← NEW
   final Function(List<String>) onSubjectsChanged;
   final bool enabled; // Add this parameter
 
@@ -13,6 +14,7 @@ class SubjectMultiSelector extends StatefulWidget {
     required this.classNumber,
     required this.availableSubjects, // ADD THIS
     required this.selectedSubjects,
+    required this.alreadySelectedSubjects, // ← ADD THIS
     required this.onSubjectsChanged,
     this.enabled = true, // Default to enabled
   });
@@ -74,7 +76,6 @@ class _SubjectMultiSelectorState extends State<SubjectMultiSelector> {
 
   void _showSubjectSelectionDialog() {
     final availableSubjects = widget.availableSubjects;
-
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -135,7 +136,7 @@ class _SubjectMultiSelectorState extends State<SubjectMultiSelector> {
                         itemCount: allSubjects.length + 1,
                         itemBuilder: (context, index) {
                           if (index == 0) {
-                            // "—" option with checkbox on left
+                            // "—" option
                             return ListTile(
                               leading: Checkbox(
                                 value: _selectedSubjects.contains('-'),
@@ -169,23 +170,52 @@ class _SubjectMultiSelectorState extends State<SubjectMultiSelector> {
                           final isCustomSubject =
                               subjectIndex < _customSubjects.length;
 
+                          // Check if this subject is already selected in OTHER rows
+                          final isAlreadySelectedInOtherRows = widget
+                              .alreadySelectedSubjects
+                              .contains(subject);
+
+                          // Check if this subject is selected in CURRENT row
+                          final isSelectedInCurrentRow = _selectedSubjects
+                              .contains(subject);
+
                           return ListTile(
                             leading: Checkbox(
-                              value: _selectedSubjects.contains(subject),
-                              onChanged: (bool? value) {
-                                setDialogState(() {
-                                  if (value == true) {
-                                    _selectedSubjects.remove('-');
-                                    _selectedSubjects.add(subject);
-                                  } else {
-                                    _selectedSubjects.remove(subject);
-                                  }
-                                });
-                              },
+                              value: isSelectedInCurrentRow,
+                              onChanged:
+                                  isAlreadySelectedInOtherRows &&
+                                      !isSelectedInCurrentRow
+                                  ? null // Disable if already selected in other rows
+                                  : (bool? value) {
+                                      setDialogState(() {
+                                        if (value == true) {
+                                          _selectedSubjects.remove('-');
+                                          _selectedSubjects.add(subject);
+                                        } else {
+                                          _selectedSubjects.remove(subject);
+                                        }
+                                      });
+                                    },
                             ),
-                            title: Text(subject),
+                            title: Text(
+                              subject,
+                              style: TextStyle(
+                                color:
+                                    isAlreadySelectedInOtherRows &&
+                                        !isSelectedInCurrentRow
+                                    ? Colors
+                                          .grey // Grey out if already selected elsewhere
+                                    : Colors.black,
+                              ),
+                            ),
                             subtitle: isCustomSubject
                                 ? const Text('Custom subject')
+                                : isAlreadySelectedInOtherRows &&
+                                      !isSelectedInCurrentRow
+                                ? Text(
+                                    'Already selected ',
+                                    style: TextStyle(color: Colors.red),
+                                  )
                                 : null,
                             trailing: isCustomSubject
                                 ? PopupMenuButton<String>(
@@ -224,8 +254,6 @@ class _SubjectMultiSelectorState extends State<SubjectMultiSelector> {
                                                                 ),
                                                               ),
                                                         ),
-                                                    // backgroundColor: Colors.red.shade700,
-                                                    // foregroundColor: Colors.white,
                                                   ),
                                                   onPressed: () =>
                                                       Navigator.pop(context),
@@ -313,10 +341,7 @@ class _SubjectMultiSelectorState extends State<SubjectMultiSelector> {
                     shape: const RoundedRectangleBorder(
                       borderRadius: BorderRadius.all(Radius.circular(4)),
                     ),
-                    // backgroundColor: Colors.grey.shade300,
-                    // foregroundColor: Colors.black,
                   ),
-
                   onPressed: () {
                     _customSubjectController.clear();
                     Navigator.of(context).pop();
@@ -388,6 +413,10 @@ class _SubjectMultiSelectorState extends State<SubjectMultiSelector> {
 
   @override
   Widget build(BuildContext context) {
+    final hasConflict = _selectedSubjects.any(
+      (subject) =>
+          subject != '-' && widget.alreadySelectedSubjects.contains(subject),
+    );
     // Read-only mode when not enabled
     if (!widget.enabled) {
       return Container(
@@ -413,20 +442,27 @@ class _SubjectMultiSelectorState extends State<SubjectMultiSelector> {
     return ElevatedButton(
       onPressed: _showSubjectSelectionDialog,
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.transparent, // Match DATE (no blue background)
-        foregroundColor: Colors.black87, // Match DATE text color
+        backgroundColor: hasConflict
+            ? Colors.orange.shade100
+            : Colors.transparent,
+        foregroundColor: Colors.black87,
         elevation: 0,
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(4), // Same rounded corners
-          side: BorderSide(color: Colors.grey.shade300), // Same border color
+          borderRadius: BorderRadius.circular(4),
+          side: BorderSide(
+            color: hasConflict ? Colors.orange : Colors.grey.shade300,
+            width: hasConflict ? 2 : 1,
+          ),
         ),
       ),
       child: Text(
         _getDisplayText(),
         style: TextStyle(
           fontSize: 10,
-          color: _selectedSubjects.isEmpty ? Colors.grey : Colors.blue.shade800,
+          color: _selectedSubjects.isEmpty
+              ? Colors.grey
+              : (hasConflict ? Colors.orange.shade800 : Colors.blue.shade800),
         ),
         textAlign: TextAlign.center,
         overflow: TextOverflow.ellipsis,
