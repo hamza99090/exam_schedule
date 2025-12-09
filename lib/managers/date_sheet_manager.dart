@@ -97,7 +97,17 @@ class DateSheetManager extends ChangeNotifier {
   void updateDate(int rowIndex, DateTime? date) {
     if (rowIndex < _data.tableRows.length) {
       _data.tableRows[rowIndex].date = date;
-      _sortRowsByDate(); // ← ADD THIS - re-sort after date change
+
+      // ALSO UPDATE THE DAY BASED ON THE NEW DATE
+      if (date != null) {
+        // Calculate day name from date
+        final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        _data.tableRows[rowIndex].day = days[date.weekday - 1];
+      } else {
+        _data.tableRows[rowIndex].day = null;
+      }
+
+      _sortRowsByDate(); // Re-sort after date change
       notifyListeners();
     }
   }

@@ -326,9 +326,17 @@ class _InteractiveTableState extends State<InteractiveTable> {
   }
 
   DataCell _buildDayCell(int index, TableRowData rowData) {
+    // Calculate day name from date dynamically
+    String? getDayNameFromDate(DateTime? date) {
+      if (date == null) return null;
+      final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      return days[date.weekday - 1];
+    }
+
     return DataCell(
       DaySelector(
-        selectedDay: rowData.day,
+        key: ValueKey('day_${index}_${rowData.date}_${rowData.day}'),
+        selectedDay: getDayNameFromDate(rowData.date), // Calculate from date
         onDaySelected: (day) {
           widget.manager.updateDay(index, day);
         },
