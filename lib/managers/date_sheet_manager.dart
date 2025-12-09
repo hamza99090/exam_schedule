@@ -303,4 +303,12 @@ class DateSheetManager extends ChangeNotifier {
     _data = _data.copyWith(logoPath: path);
     notifyListeners();
   }
+
+  // Add this method to DateSheetManager
+  void updateSavedDateSheet(int index, DateSheetData updatedSheet) {
+    if (index < _dateSheetsBox.length) {
+      _dateSheetsBox.putAt(index, updatedSheet);
+      notifyListeners();
+    }
+  }
 }

@@ -101,13 +101,19 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
   }
 
   void _saveChanges() {
-    // Update the original date sheet in manager
+    // Find the index of this date sheet
     final index = widget.manager.savedDateSheets.indexOf(widget.dateSheet);
     if (index != -1) {
-      widget.manager.savedDateSheets[index] = _editableDateSheet.copyWith(
+      // Create updated sheet
+      final updatedSheet = _editableDateSheet.copyWith(
         createdAt: DateTime.now(),
       );
-      widget.manager.notifyListeners();
+
+      // Save to Hive via manager
+      widget.manager.updateSavedDateSheet(index, updatedSheet);
+
+      // Also update the local reference
+      _editableDateSheet = updatedSheet;
     }
 
     setState(() {
