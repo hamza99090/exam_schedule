@@ -341,6 +341,8 @@ class _InteractiveTableState extends State<InteractiveTable> {
     return widget.manager.data.classNames.asMap().entries.map((entry) {
       final classIndex = entry.key;
       final classNum = entry.value;
+      // Check if date is selected for this row
+      final bool hasDate = rowData.date != null;
 
       // Get all subjects already selected for this class in OTHER rows
       List<String> alreadySelectedSubjects = [];
@@ -361,6 +363,19 @@ class _InteractiveTableState extends State<InteractiveTable> {
             selectedSubjects: rowData.classSubjects[classNum] ?? [],
             alreadySelectedSubjects: alreadySelectedSubjects, // ← NEW PARAMETER
             onSubjectsChanged: (subjects) {
+              if (!hasDate && widget.isEditing) {
+                // Show snackbar warning
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Please select a date first for row ${rowIndex + 1}',
+                    ),
+                    backgroundColor: Colors.red,
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+                return; // Don't update subjects
+              }
               widget.manager.updateClassSubjects(rowIndex, classNum, subjects);
             },
             enabled: widget.isEditing,

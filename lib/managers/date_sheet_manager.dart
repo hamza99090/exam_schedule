@@ -124,37 +124,41 @@ class DateSheetManager extends ChangeNotifier {
     if (index >= 0 && index < _data.classNames.length) {
       final oldClassName = _data.classNames[index];
 
-      // Check if old name was a default class
-      final bool wasDefault = DateSheetData.defaultClassNames.contains(
-        oldClassName,
-      );
+      // Check if new name already exists
+      final existingIndex = _data.classNames.indexOf(newName);
+      final bool isDuplicate = existingIndex != -1 && existingIndex != index;
 
-      _data.classNames = List<String>.from(_data.classNames);
-      _data.classNames[index] = newName;
+      if (isDuplicate) {
+        // SWAP the two classes
+        _data.classNames = List<String>.from(_data.classNames);
+        _data.classNames[index] = newName;
+        _data.classNames[existingIndex] = oldClassName;
+
+        // Swap subjects in all rows
+        for (var row in _data.tableRows) {
+          final tempSubjects = row.classSubjects[oldClassName] ?? [];
+          row.classSubjects[oldClassName] = row.classSubjects[newName] ?? [];
+          row.classSubjects[newName] = tempSubjects;
+        }
+      } else {
+        // Normal rename (no duplicate)
+        _data.classNames = List<String>.from(_data.classNames);
+        _data.classNames[index] = newName;
+
+        // Move subjects to new name
+        for (var row in _data.tableRows) {
+          final subjects = row.classSubjects[oldClassName] ?? [];
+          row.classSubjects.remove(oldClassName);
+          row.classSubjects[newName] = subjects;
+        }
+      }
 
       // Update starring
       if (star) {
         if (!_starredClassNames.contains(newName)) {
           _starredClassNames.add(newName);
         }
-        // Remove old name from starred if it was starred
         _starredClassNames.remove(oldClassName);
-
-        // Track mapping if replacing a default class with custom name
-        if (wasDefault && !DateSheetData.defaultClassNames.contains(newName)) {
-          _customToDefaultMapping[newName] = oldClassName;
-        }
-      }
-
-      // Update rows
-      for (var row in _data.tableRows) {
-        if (row.classSubjects.containsKey(oldClassName)) {
-          final subjects = row.classSubjects[oldClassName] ?? [];
-          row.classSubjects.remove(oldClassName);
-          row.classSubjects[newName] = subjects;
-        } else {
-          row.classSubjects[newName] = [];
-        }
       }
 
       _saveStarredClassNames();
