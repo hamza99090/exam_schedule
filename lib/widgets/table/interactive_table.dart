@@ -108,6 +108,10 @@ class _InteractiveTableState extends State<InteractiveTable> {
 
   @override
   Widget build(BuildContext context) {
+    // Return empty widget if no rows
+    if (widget.manager.data.tableRows.isEmpty) {
+      return SizedBox.shrink();
+    }
     return Card(
       elevation: 4,
       child: Padding(

@@ -16,7 +16,17 @@ class DateSheetManager extends ChangeNotifier {
 
   DateSheetManager() {
     _initHiveBox();
+    // Ensure initial state has NO rows
+    if (_data.tableRows.isNotEmpty) {
+      _data.tableRows.clear();
+    }
+    _hasRows = false;
   }
+  // Add this line after the other fields in DateSheetManager class (around line 20)
+  bool _hasRows = true; // Track if we have any rows
+
+  // Add this getter
+  bool get hasRows => _hasRows;
 
   // Update the init method to load starred names
   Future<void> _initHiveBox() async {
@@ -74,8 +84,10 @@ class DateSheetManager extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Modify addNewRow method (around line 95)
   void addNewRow() {
     _data.tableRows.add(TableRowData(classNames: _data.classNames));
+    _hasRows = true; // We now have rows
     notifyListeners();
   }
 
@@ -169,7 +181,7 @@ class DateSheetManager extends ChangeNotifier {
 
   // Save date sheet to Hive
   // Add this method to DateSheetManager
-  // Update resetToDefault to use starred class names
+  // Modify resetToDefault method (around line 142) to initialize with no rows
   void resetToDefault() {
     // Start with default class names
     List<String> initialClassNames = List.from(DateSheetData.defaultClassNames);
@@ -186,13 +198,13 @@ class DateSheetManager extends ChangeNotifier {
       schoolName: '',
       dateSheetDescription: '',
       termDescription: '',
-      tableRows: [TableRowData(classNames: initialClassNames)],
+      tableRows: [], // Start with EMPTY table rows
       fileName: '',
       createdAt: DateTime.now(),
       classNames: initialClassNames,
     );
-    // Also reset logo path
-    _logoPath = null; // ADD THIS LINE
+    _hasRows = false; // No rows initially
+    _logoPath = null;
     notifyListeners();
   }
 
@@ -237,10 +249,6 @@ class DateSheetManager extends ChangeNotifier {
   void deleteRow(int rowIndex) {
     if (rowIndex >= 0 && rowIndex < _data.tableRows.length) {
       _data.tableRows.removeAt(rowIndex);
-      // If all rows are deleted, add one empty row
-      if (_data.tableRows.isEmpty) {
-        _data.tableRows.add(TableRowData(classNames: _data.classNames));
-      }
       notifyListeners();
     }
   }

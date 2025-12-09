@@ -37,7 +37,7 @@ class DateSheetData {
     DateTime? createdAt,
     List<String>? classNames,
     this.logoPath, // Add to constructor
-  }) : tableRows = tableRows ?? [TableRowData()],
+  }) : tableRows = tableRows ?? [],
        createdAt = createdAt ?? DateTime.now(),
        classNames = classNames ?? defaultClassNames;
 

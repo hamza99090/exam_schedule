@@ -17,7 +17,8 @@ class DateSheetScreen extends StatefulWidget {
 class _DateSheetScreenState extends State<DateSheetScreen> {
   final ScrollController _scrollController = ScrollController();
   final GlobalKey<FormState> _headerFormKey = GlobalKey<FormState>();
-  bool _hasUnsavedChanges = false;
+  // bool _hasUnsavedChanges = false;
+  bool _showTable = false; // Track if table should be visible
 
   void _showSaveDialog() {
     showDialog(
@@ -77,7 +78,7 @@ class _DateSheetScreenState extends State<DateSheetScreen> {
   void _saveDateSheet(String fileName) {
     setState(() {
       widget.manager.saveDateSheet(fileName);
-      _hasUnsavedChanges = false; // Reset after saving
+      // _hasUnsavedChanges = false; // Reset after saving
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -91,75 +92,78 @@ class _DateSheetScreenState extends State<DateSheetScreen> {
   void _addNewRowAndScroll() {
     setState(() {
       widget.manager.addNewRow();
-      _hasUnsavedChanges = true; // Track changes
+      // _hasUnsavedChanges = true; // Track changes
+      _showTable = true; // Show table when first row is added
     });
 
     // Scroll to bottom after a short delay to allow the UI to update
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
     });
   }
 
   // Show the three-button popup when trying to exit
-  Future<bool> _showExitConfirmationDialog() async {
-    final result = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text('Unsaved Changes'),
-        content: const Text(
-          'You have unsaved changes. What would you like to do?',
-        ),
-        actions: [
-          // Keep Editing button
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Keep Editing'),
-          ),
+  // Future<bool> _showExitConfirmationDialog() async {
+  //   final result = await showDialog<bool>(
+  //     context: context,
+  //     barrierDismissible: false,
+  //     builder: (context) => AlertDialog(
+  //       title: const Text('Unsaved Changes'),
+  //       content: const Text(
+  //         'You have unsaved changes. What would you like to do?',
+  //       ),
+  //       actions: [
+  //         // Keep Editing button
+  //         TextButton(
+  //           onPressed: () => Navigator.pop(context, false),
+  //           child: const Text('Keep Editing'),
+  //         ),
 
-          // Save button
-          TextButton(
-            onPressed: () {
-              // Validate header first
-              if (_headerFormKey.currentState!.validate()) {
-                Navigator.pop(context, true); // Close confirmation dialog
-                _showSaveDialog(); // Show save dialog
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Please fill required fields before saving.'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-                Navigator.pop(context, false); // Stay on screen
-              }
-            },
-            child: const Text('Save', style: TextStyle(color: Colors.green)),
-          ),
+  //         // Save button
+  //         TextButton(
+  //           onPressed: () {
+  //             // Validate header first
+  //             if (_headerFormKey.currentState!.validate()) {
+  //               Navigator.pop(context, true); // Close confirmation dialog
+  //               _showSaveDialog(); // Show save dialog
+  //             } else {
+  //               ScaffoldMessenger.of(context).showSnackBar(
+  //                 const SnackBar(
+  //                   content: Text('Please fill required fields before saving.'),
+  //                   backgroundColor: Colors.red,
+  //                 ),
+  //               );
+  //               Navigator.pop(context, false); // Stay on screen
+  //             }
+  //           },
+  //           child: const Text('Save', style: TextStyle(color: Colors.green)),
+  //         ),
 
-          // Cancel (discard) button
-          // Update the Discard button in the _showExitConfirmationDialog method
-          TextButton(
-            onPressed: () {
-              // Reset the form to empty/default state
-              widget.manager.resetToDefault();
-              _hasUnsavedChanges = false;
-              Navigator.pop(context, true); // Allow navigation
-            },
-            child: const Text('Discard', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
+  //         // Cancel (discard) button
+  //         // Update the Discard button in the _showExitConfirmationDialog method
+  //         TextButton(
+  //           onPressed: () {
+  //             // Reset the form to empty/default state
+  //             widget.manager.resetToDefault();
+  //             // _hasUnsavedChanges = false;
+  //             Navigator.pop(context, true); // Allow navigation
+  //           },
+  //           child: const Text('Discard', style: TextStyle(color: Colors.red)),
+  //         ),
+  //       ],
+  //     ),
+  //   );
 
-    // If result is true, allow navigation (either saved or discarded)
-    // If result is false, stay on screen
-    return result ?? false;
-  }
+  //   // If result is true, allow navigation (either saved or discarded)
+  //   // If result is false, stay on screen
+  //   return result ?? false;
+  // }
 
   @override
   void initState() {
@@ -169,10 +173,13 @@ class _DateSheetScreenState extends State<DateSheetScreen> {
     widget.manager.addListener(() {
       if (mounted) {
         setState(() {
-          _hasUnsavedChanges = true;
+          // _hasUnsavedChanges = true;
+          _showTable = widget.manager.hasRows;
         });
       }
     });
+    // Initialize table visibility
+    _showTable = widget.manager.hasRows;
   }
 
   @override
@@ -186,9 +193,9 @@ class _DateSheetScreenState extends State<DateSheetScreen> {
     return WillPopScope(
       onWillPop: () async {
         // Only show dialog if there are unsaved changes
-        if (_hasUnsavedChanges) {
-          return await _showExitConfirmationDialog();
-        }
+        // if (_hasUnsavedChanges) {
+        //   return await _showExitConfirmationDialog();
+        // }
         return true; // Allow exit if no unsaved changes
       },
       child: GestureDetector(
@@ -210,28 +217,27 @@ class _DateSheetScreenState extends State<DateSheetScreen> {
                     tooltip: "Saved Date Sheets",
                     onPressed: () {
                       // Check for unsaved changes before navigating
-                      if (_hasUnsavedChanges) {
-                        _showExitConfirmationDialog().then((allowNavigation) {
-                          if (allowNavigation) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => SavedDateSheetsScreen(
-                                  manager: widget.manager,
-                                ),
-                              ),
-                            );
-                          }
-                        });
-                      } else {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                SavedDateSheetsScreen(manager: widget.manager),
-                          ),
-                        );
-                      }
+                      // if (_hasUnsavedChanges) {
+                      //   _showExitConfirmationDialog().then((allowNavigation) {
+                      //     if (allowNavigation) {
+                      //       Navigator.push(
+                      //         context,
+                      //         MaterialPageRoute(
+                      //           builder: (_) => SavedDateSheetsScreen(
+                      //             manager: widget.manager,
+                      //           ),
+                      //         ),
+                      //       );
+                      //     }
+                      //   });
+                      // } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              SavedDateSheetsScreen(manager: widget.manager),
+                        ),
+                      );
                     },
                   ),
 
@@ -332,11 +338,15 @@ class _DateSheetScreenState extends State<DateSheetScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Interactive Table - This grows with rows
-                      InteractiveTable(
-                        manager: widget.manager,
-                        isEditing: true,
-                      ),
+                      // Replace the InteractiveTable section (around line 265-268) with:
+                      if (_showTable) ...[
+                        // Interactive Table - This grows with rows
+                        InteractiveTable(
+                          manager: widget.manager,
+                          isEditing: true,
+                        ),
+                        const SizedBox(height: 16),
+                      ],
 
                       // Add New Row Button - Outside the card, moves down as table grows
                       Padding(

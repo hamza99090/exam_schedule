@@ -594,7 +594,11 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
             const SizedBox(height: 16),
             _buildDateSheetTable(),
             const SizedBox(height: 16),
-            if (_isEditing) _buildAddRowButton(),
+            if (_isEditing)
+              Padding(
+                padding: const EdgeInsets.all(18.0),
+                child: _buildAddRowButton(),
+              ),
           ],
         ),
       ),
