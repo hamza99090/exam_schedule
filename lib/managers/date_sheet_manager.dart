@@ -90,12 +90,14 @@ class DateSheetManager extends ChangeNotifier {
   void addNewRow() {
     _data.tableRows.add(TableRowData(classNames: _data.classNames));
     _hasRows = true; // We now have rows
+    _sortRowsByDate(); // ← ADD THIS
     notifyListeners();
   }
 
   void updateDate(int rowIndex, DateTime? date) {
     if (rowIndex < _data.tableRows.length) {
       _data.tableRows[rowIndex].date = date;
+      _sortRowsByDate(); // ← ADD THIS - re-sort after date change
       notifyListeners();
     }
   }
@@ -241,6 +243,8 @@ class DateSheetManager extends ChangeNotifier {
 
   // Update saveDateSheet() to use it
   void saveDateSheet(String fileName) {
+    // Sort before saving
+    _sortRowsByDate();
     // Create a DEEP copy with all data
     final savedSheet = DateSheetData(
       schoolName: _data.schoolName,
@@ -264,6 +268,7 @@ class DateSheetManager extends ChangeNotifier {
   void loadDateSheet(DateSheetData dateSheet) {
     _data = dateSheet.copyWith();
     _logoPath = dateSheet.logoPath; // ADD THIS LINE - load the logo
+    _sortRowsByDate(); // ← ADD THIS
     notifyListeners();
   }
 
@@ -280,6 +285,7 @@ class DateSheetManager extends ChangeNotifier {
   void deleteRow(int rowIndex) {
     if (rowIndex >= 0 && rowIndex < _data.tableRows.length) {
       _data.tableRows.removeAt(rowIndex);
+      _sortRowsByDate(); // ← ADD THIS - re-sort after deletion
       notifyListeners();
     }
   }
@@ -325,5 +331,18 @@ class DateSheetManager extends ChangeNotifier {
       }
     }
     return false;
+  }
+
+  // Add this method to sort rows by date
+  void _sortRowsByDate() {
+    // Sort rows by date (null dates go to the end)
+    _data.tableRows.sort((a, b) {
+      if (a.date == null && b.date == null) return 0;
+      if (a.date == null) return 1; // null dates go to bottom
+      if (b.date == null) return -1; // null dates go to bottom
+      return a.date!.compareTo(b.date!); // Sort ascending (earliest first)
+    });
+
+    notifyListeners();
   }
 }
