@@ -556,10 +556,17 @@ class _InteractiveTableState extends State<InteractiveTable> {
                                             );
                                           }
 
-                                          // If it was selected, reset selection
+                                          // If it was selected, revert to the default class at THIS INDEX
                                           if (selectedClass == item) {
-                                            selectedClass =
-                                                defaultClasses.first;
+                                            // Use the index parameter that was passed to this method!
+                                            // This tells us which column we're editing
+                                            if (index < defaultClasses.length) {
+                                              selectedClass =
+                                                  defaultClasses[index]; // Use the column index!
+                                            } else {
+                                              selectedClass =
+                                                  defaultClasses.first;
+                                            }
                                           }
                                         });
                                       }

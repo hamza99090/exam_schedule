@@ -10,6 +10,8 @@ class DateSheetManager extends ChangeNotifier {
 
   // Getter for starred class names
   List<String> get starredClassNames => List.from(_starredClassNames);
+  // Add this field in DateSheetManager class
+  Map<String, String> _customToDefaultMapping = {}; // CustomName -> DefaultName
   // In-memory logo path for header image (not persisted in Hive)
   String? _logoPath;
   String? get logoPath => _logoPath;
@@ -116,10 +118,14 @@ class DateSheetManager extends ChangeNotifier {
     }
   }
 
-  // Update the updateClassName method to support starring
   void updateClassName(int index, String newName, {bool star = false}) {
     if (index >= 0 && index < _data.classNames.length) {
       final oldClassName = _data.classNames[index];
+
+      // Check if old name was a default class
+      final bool wasDefault = DateSheetData.defaultClassNames.contains(
+        oldClassName,
+      );
 
       _data.classNames = List<String>.from(_data.classNames);
       _data.classNames[index] = newName;
@@ -131,8 +137,14 @@ class DateSheetManager extends ChangeNotifier {
         }
         // Remove old name from starred if it was starred
         _starredClassNames.remove(oldClassName);
+
+        // Track mapping if replacing a default class with custom name
+        if (wasDefault && !DateSheetData.defaultClassNames.contains(newName)) {
+          _customToDefaultMapping[newName] = oldClassName;
+        }
       }
 
+      // Update rows
       for (var row in _data.tableRows) {
         if (row.classSubjects.containsKey(oldClassName)) {
           final subjects = row.classSubjects[oldClassName] ?? [];
@@ -143,22 +155,33 @@ class DateSheetManager extends ChangeNotifier {
         }
       }
 
-      // Save starred class names to Hive
       _saveStarredClassNames();
-
       notifyListeners();
     }
   }
 
-  // Method to star/unstar a class name
+  // Modify toggleStarClassName to track mapping
   void toggleStarClassName(String className) {
     if (_starredClassNames.contains(className)) {
       _starredClassNames.remove(className);
+      // Remove from mapping when unstarred
+      _customToDefaultMapping.remove(className);
     } else {
       _starredClassNames.add(className);
+
+      // If this is a custom name (not in default classes), track what it replaced
+      if (!DateSheetData.defaultClassNames.contains(className)) {
+        // Find which default class this replaced based on position
+        // This is tricky - we need to know which index this custom class is at
+      }
     }
     _saveStarredClassNames();
     notifyListeners();
+  }
+
+  // Add a method to get the original default name for a custom class
+  String? getOriginalDefaultName(String customName) {
+    return _customToDefaultMapping[customName];
   }
 
   // Check if a class name is starred
@@ -166,17 +189,25 @@ class DateSheetManager extends ChangeNotifier {
     return _starredClassNames.contains(className);
   }
 
-  // Save starred class names to Hive
+  // Save and load the mapping in Hive
   Future<void> _saveStarredClassNames() async {
     final starredBox = Hive.box<List<String>>('starredClassesBox');
     await starredBox.put('starredClassNames', _starredClassNames);
+
+    // Also save the mapping
+    final mappingBox = Hive.box<Map<String, String>>('classMappingBox');
+    await mappingBox.put('customToDefaultMapping', _customToDefaultMapping);
   }
 
-  // Load starred class names from Hive
   Future<void> _loadStarredClassNames() async {
     final starredBox = Hive.box<List<String>>('starredClassesBox');
     _starredClassNames =
         starredBox.get('starredClassNames', defaultValue: []) ?? [];
+
+    // Also load the mapping
+    final mappingBox = Hive.box<Map<String, String>>('classMappingBox');
+    _customToDefaultMapping =
+        mappingBox.get('customToDefaultMapping', defaultValue: {}) ?? {};
   }
 
   // Save date sheet to Hive
