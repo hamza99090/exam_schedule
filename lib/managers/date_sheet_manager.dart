@@ -311,4 +311,19 @@ class DateSheetManager extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  bool get hasData {
+    // Check if any row has any subject selected for any class
+    for (var row in _data.tableRows) {
+      for (var className in _data.classNames) {
+        final subjects = row.classSubjects[className] ?? [];
+        // Check if there's at least one non-empty subject that's not "-"
+        if (subjects.isNotEmpty &&
+            subjects.any((s) => s.isNotEmpty && s != '-')) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
 }

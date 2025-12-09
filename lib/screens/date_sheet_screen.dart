@@ -53,6 +53,7 @@ class _DateSheetScreenState extends State<DateSheetScreen> {
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('Cancel'),
             ),
+            // In _showSaveDialog method, update the Save button
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 shape: const RoundedRectangleBorder(
@@ -63,8 +64,22 @@ class _DateSheetScreenState extends State<DateSheetScreen> {
               ),
               onPressed: () {
                 if (fileName.isNotEmpty) {
-                  _saveDateSheet(fileName);
-                  Navigator.of(context).pop();
+                  // Check if there's any data to save
+                  if (widget.manager.hasData) {
+                    _saveDateSheet(fileName);
+                    Navigator.of(context).pop();
+                  } else {
+                    // Show error - no data to save
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Please add some subjects before saving.',
+                        ),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    // Don't close the dialog - let user add data first
+                  }
                 }
               },
               child: const Text('Save'),
@@ -302,20 +317,43 @@ class _DateSheetScreenState extends State<DateSheetScreen> {
                               final formState = _headerFormKey.currentState;
                               if (formState != null) {
                                 if (formState.validate()) {
-                                  _showSaveDialog();
+                                  // Check if there's data to save
+                                  if (widget.manager.hasData) {
+                                    _showSaveDialog();
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Please add some subjects before saving.',
+                                        ),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
                                 } else {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                       content: Text(
-                                        "Please fill required fields before saving.",
+                                        'Please fill required fields before saving.',
                                       ),
                                       backgroundColor: Colors.red,
                                     ),
                                   );
                                 }
                               } else {
-                                // No form in header (image-only header), just show save dialog
-                                _showSaveDialog();
+                                // No form in header (image-only header), check data
+                                if (widget.manager.hasData) {
+                                  _showSaveDialog();
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Please add some subjects before saving.',
+                                      ),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
                               }
                             },
                             icon: const Icon(Icons.save, size: 20),

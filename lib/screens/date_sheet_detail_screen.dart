@@ -101,6 +101,31 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
   }
 
   void _saveChanges() {
+    // Check if there's any data
+    bool hasData = false;
+    for (var row in _editableDateSheet.tableRows) {
+      for (var className in _editableDateSheet.classNames) {
+        final subjects = row.classSubjects[className] ?? [];
+        if (subjects.isNotEmpty &&
+            subjects.any((s) => s.isNotEmpty && s != '-')) {
+          hasData = true;
+          break;
+        }
+      }
+      if (hasData) break;
+    }
+
+    if (!hasData) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Cannot save empty date sheet. Add some subjects first.',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
     // Find the index of this date sheet
     final index = widget.manager.savedDateSheets.indexOf(widget.dateSheet);
     if (index != -1) {
