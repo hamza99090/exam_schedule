@@ -79,8 +79,14 @@ class HomeScreen extends StatelessWidget {
                         ),
                       );
                     },
-                    icon: const Icon(Icons.library_books),
-                    label: const Text('View Saved Date Sheets'),
+                    icon: Icon(
+                      Icons.library_books,
+                      color: Colors.blue.shade600,
+                    ),
+                    label: Text(
+                      'View Saved Date Sheets',
+                      style: TextStyle(color: Colors.blue.shade600),
+                    ),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       side: BorderSide(color: Colors.blue.shade600),
