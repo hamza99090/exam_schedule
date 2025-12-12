@@ -1,3 +1,4 @@
+// UPDATED InteractiveTable widget ka code - Action column RIGHT side
 import 'package:exam_schedule/date_picker_handler.dart';
 import 'package:exam_schedule/day_selector.dart';
 import 'package:exam_schedule/models/table_row_model.dart';
@@ -8,12 +9,12 @@ import '../cells/subject_multi_selector.dart';
 class InteractiveTable extends StatefulWidget {
   final DateSheetManager manager;
   final bool isEditing;
-  final Map<String, List<String>>? alreadySelectedSubjectsMap; // ← ADD THIS
+  final Map<String, List<String>>? alreadySelectedSubjectsMap;
   const InteractiveTable({
     super.key,
     required this.manager,
     this.isEditing = true,
-    this.alreadySelectedSubjectsMap, // ← ADD THIS
+    this.alreadySelectedSubjectsMap,
   });
 
   @override
@@ -82,7 +83,6 @@ class _InteractiveTableState extends State<InteractiveTable> {
             onPressed: () {
               widget.manager.deleteRow(index);
               Navigator.pop(context);
-              // Show undo snackbar
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: const Text('Row deleted'),
@@ -93,6 +93,31 @@ class _InteractiveTableState extends State<InteractiveTable> {
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
         ],
+      ),
+    );
+  }
+
+  void _resetRow(int rowIndex) {
+    setState(() {
+      final row = widget.manager.data.tableRows[rowIndex];
+      // Reset date and day
+      row.date = null;
+      row.day = null;
+
+      // Reset all class subjects - remove the key completely
+      for (var className in widget.manager.data.classNames) {
+        row.classSubjects.remove(className); // Remove the entry
+      }
+
+      // Notify manager
+      widget.manager.notifyListeners();
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Row ${rowIndex + 1} reset successfully'),
+        backgroundColor: Colors.green,
+        duration: Duration(seconds: 2),
       ),
     );
   }
@@ -109,160 +134,233 @@ class _InteractiveTableState extends State<InteractiveTable> {
 
   @override
   Widget build(BuildContext context) {
-    // Return empty widget if no rows
     if (widget.manager.data.tableRows.isEmpty) {
       return SizedBox.shrink();
     }
+
     return Card(
       elevation: 4,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Scrollbar(
-          controller: _horizontalScrollController,
-          thumbVisibility: true,
-          interactive: true,
-          child: Container(
-            margin: const EdgeInsets.only(
-              bottom: 10.0,
-            ), // ← Space between table and scrollbar
-            child: SingleChildScrollView(
-              controller: _horizontalScrollController,
-              scrollDirection: Axis.horizontal,
-              child: DataTable(
-                headingTextStyle: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                  fontSize: 12,
-                ),
-                headingRowColor: MaterialStateProperty.all(
-                  Colors.blue.shade600, // Slightly lighter blue than current
-                ),
-                headingRowHeight: 42,
-                dataTextStyle: TextStyle(
-                  fontSize: 11,
-                  color: Colors.grey.shade800,
-                  fontWeight: FontWeight.w500,
-                ),
-                columnSpacing: 14,
-                dataRowMinHeight: 42,
-                dataRowMaxHeight: 52,
-                horizontalMargin: 10,
-                dividerThickness: 0.3,
-                // Add subtle horizontal dividers
-                border: TableBorder(
-                  horizontalInside: BorderSide(
-                    color: Colors.grey.shade200,
-                    width: 0.3,
-                  ),
-                  verticalInside: BorderSide(
-                    color: Colors.grey.shade200,
-                    width: 0.3,
-                  ),
-                ), // ← ADD THIS LINE - removes left/right padding
-                columns: [
-                  // Add Actions column for delete buttons - NOW FIRST
-                  if (widget.isEditing)
-                    DataColumn(
-                      label: SizedBox(
-                        width: 40,
-                        child: Text(
-                          'Action',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // SCROLLABLE TABLE (without Action column)
+                Expanded(
+                  child: Scrollbar(
+                    controller: _horizontalScrollController,
+                    thumbVisibility: true,
+                    interactive: true,
+                    child: SingleChildScrollView(
+                      controller: _horizontalScrollController,
+                      scrollDirection: Axis.horizontal,
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 10.0),
+                        child: DataTable(
+                          headingTextStyle: TextStyle(
+                            fontWeight: FontWeight.w600,
                             color: Colors.white,
                             fontSize: 12,
                           ),
-                          textAlign: TextAlign.left,
-                        ),
-                      ),
-                    ),
-                  DataColumn(
-                    label: SizedBox(
-                      width: 80, // Set fixed width for Date column
-                      child: Text(
-                        'Date',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          fontSize: 12,
-                        ),
-                        textAlign: TextAlign.left,
-                      ),
-                    ),
-                  ),
-                  DataColumn(
-                    label: SizedBox(
-                      width: 60, // Set fixed width for Day column
-                      child: Text(
-                        'Day',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          fontSize: 12,
-                        ),
-                        textAlign: TextAlign.left,
-                      ),
-                    ),
-                  ),
-                  ...widget.manager.data.classNames.asMap().entries.map((e) {
-                    final index = e.key;
-                    return DataColumn(
-                      label: SizedBox(
-                        width: 100, // Fixed width for all class columns
-                        child: _buildClassNameEditor(index, e.value),
-                      ),
-                    );
-                  }).toList(),
-                ],
-                rows: widget.manager.data.tableRows.asMap().entries.map((e) {
-                  final index = e.key;
-                  final rowData = e.value;
-                  return DataRow(
-                    cells: [
-                      // Delete button cell - only show in edit mode - NOW FIRST
-                      if (widget.isEditing)
-                        DataCell(
-                          Container(
-                            width: 40,
-                            child: PopupMenuButton<String>(
-                              icon: Icon(
-                                Icons.more_vert,
-                                color: Colors.grey.shade600,
-                                size: 20,
+                          headingRowColor: MaterialStateProperty.all(
+                            Colors.blue.shade600,
+                          ),
+                          headingRowHeight: 42,
+                          dataTextStyle: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey.shade800,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          columnSpacing: 14,
+                          dataRowMinHeight: 42,
+                          dataRowMaxHeight: 52,
+                          horizontalMargin: 10,
+                          dividerThickness: 0.3,
+                          border: TableBorder(
+                            horizontalInside: BorderSide(
+                              color: Colors.grey.shade200,
+                              width: 0.3,
+                            ),
+                            verticalInside: BorderSide(
+                              color: Colors.grey.shade200,
+                              width: 0.3,
+                            ),
+                          ),
+                          columns: [
+                            DataColumn(
+                              label: SizedBox(
+                                width: 80,
+                                child: Text(
+                                  'Date',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                  ),
+                                  textAlign: TextAlign.left,
+                                ),
                               ),
-                              onSelected: (value) {
-                                if (value == 'delete') {
-                                  _showDeleteConfirmation(index);
-                                }
-                              },
-                              itemBuilder: (BuildContext context) =>
-                                  <PopupMenuEntry<String>>[
-                                    PopupMenuItem<String>(
-                                      value: 'delete',
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.delete_outline),
-                                          SizedBox(width: 12),
-                                          Text('Delete'),
-                                        ],
+                            ),
+                            DataColumn(
+                              label: SizedBox(
+                                width: 60,
+                                child: Text(
+                                  'Day',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                  ),
+                                  textAlign: TextAlign.left,
+                                ),
+                              ),
+                            ),
+                            ...widget.manager.data.classNames
+                                .asMap()
+                                .entries
+                                .map((e) {
+                                  final index = e.key;
+                                  return DataColumn(
+                                    label: SizedBox(
+                                      width: 100,
+                                      child: _buildClassNameEditor(
+                                        index,
+                                        e.value,
                                       ),
                                     ),
+                                  );
+                                })
+                                .toList(),
+                          ],
+                          rows: widget.manager.data.tableRows
+                              .asMap()
+                              .entries
+                              .map((e) {
+                                final index = e.key;
+                                final rowData = e.value;
+                                return DataRow(
+                                  cells: [
+                                    _buildDateCell(index, rowData),
+                                    _buildDayCell(index, rowData),
+                                    ..._buildClassCells(index, rowData),
                                   ],
-                              padding: EdgeInsets.all(
-                                4,
-                              ), // Adjust padding as needed
+                                );
+                              })
+                              .toList(),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // FIXED ACTION COLUMN (right side, doesn't scroll)
+                if (widget.isEditing)
+                  Container(
+                    width: 70, // Fixed width
+                    margin: EdgeInsets.only(left: 8),
+                    child: Column(
+                      children: [
+                        // Action column header
+                        Container(
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade600,
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(4),
+                              topRight: Radius.circular(4),
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'Action',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                fontSize: 12,
+                              ),
                             ),
                           ),
                         ),
-                      _buildDateCell(index, rowData),
-                      _buildDayCell(index, rowData),
-                      ..._buildClassCells(index, rowData),
-                    ],
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
+
+                        // Action buttons for each row
+                        ...widget.manager.data.tableRows.asMap().entries.map((
+                          e,
+                        ) {
+                          final index = e.key;
+                          return Container(
+                            height: 52, // Match table row height
+                            decoration: BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: Colors.grey.shade200,
+                                  width: 0.3,
+                                ),
+                                left: BorderSide(
+                                  color: Colors.grey.shade200,
+                                  width: 0.3,
+                                ),
+                                right: BorderSide(
+                                  color: Colors.grey.shade200,
+                                  width: 0.3,
+                                ),
+                              ),
+                            ),
+                            child: Center(
+                              child: PopupMenuButton<String>(
+                                icon: Icon(
+                                  Icons.more_vert,
+                                  color: Colors.grey.shade600,
+                                  size: 20,
+                                ),
+                                onSelected: (value) {
+                                  if (value == 'reset') {
+                                    _resetRow(index);
+                                  } else if (value == 'delete') {
+                                    _showDeleteConfirmation(index);
+                                  }
+                                },
+                                itemBuilder: (BuildContext context) =>
+                                    <PopupMenuEntry<String>>[
+                                      PopupMenuItem<String>(
+                                        value: 'reset',
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.restart_alt,
+                                              color: Colors.blue,
+                                            ),
+                                            SizedBox(width: 8),
+                                            Text('Reset'),
+                                          ],
+                                        ),
+                                      ),
+                                      PopupMenuItem<String>(
+                                        value: 'delete',
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.delete_outline,
+                                              color: Colors.red,
+                                            ),
+                                            SizedBox(width: 8),
+                                            Text('Delete'),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                padding: EdgeInsets.all(4),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ],
+                    ),
+                  ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -308,8 +406,8 @@ class _InteractiveTableState extends State<InteractiveTable> {
   DataCell _buildDateCell(int index, TableRowData rowData) {
     return DataCell(
       Container(
-        padding: EdgeInsets.zero, // ← Remove any container padding
-        margin: EdgeInsets.zero, // ← Remove any container margin
+        padding: EdgeInsets.zero,
+        margin: EdgeInsets.zero,
         alignment: Alignment.centerLeft,
         child: DatePickerHandler(
           initialDate: rowData.date,
@@ -326,7 +424,6 @@ class _InteractiveTableState extends State<InteractiveTable> {
   }
 
   DataCell _buildDayCell(int index, TableRowData rowData) {
-    // Calculate day name from date dynamically
     String? getDayNameFromDate(DateTime? date) {
       if (date == null) return null;
       final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -336,7 +433,7 @@ class _InteractiveTableState extends State<InteractiveTable> {
     return DataCell(
       DaySelector(
         key: ValueKey('day_${index}_${rowData.date}_${rowData.day}'),
-        selectedDay: getDayNameFromDate(rowData.date), // Calculate from date
+        selectedDay: getDayNameFromDate(rowData.date),
         onDaySelected: (day) {
           widget.manager.updateDay(index, day);
         },
@@ -349,19 +446,17 @@ class _InteractiveTableState extends State<InteractiveTable> {
     return widget.manager.data.classNames.asMap().entries.map((entry) {
       final classIndex = entry.key;
       final classNum = entry.value;
-      // Check if date is selected for this row
       final bool hasDate = rowData.date != null;
 
-      // Get all subjects already selected for this class in OTHER rows
       List<String> alreadySelectedSubjects = [];
       for (int i = 0; i < widget.manager.data.tableRows.length; i++) {
         if (i != rowIndex) {
-          // Skip current row
           final otherRow = widget.manager.data.tableRows[i];
           final subjects = otherRow.classSubjects[classNum] ?? [];
           alreadySelectedSubjects.addAll(subjects);
         }
       }
+
       return DataCell(
         SizedBox(
           width: 100,
@@ -369,10 +464,9 @@ class _InteractiveTableState extends State<InteractiveTable> {
             classNumber: classNum,
             availableSubjects: widget.manager.getSubjectsForClass(classNum),
             selectedSubjects: rowData.classSubjects[classNum] ?? [],
-            alreadySelectedSubjects: alreadySelectedSubjects, // ← NEW PARAMETER
+            alreadySelectedSubjects: alreadySelectedSubjects,
             onSubjectsChanged: (subjects) {
               if (!hasDate && widget.isEditing) {
-                // Show snackbar warning
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
@@ -382,7 +476,7 @@ class _InteractiveTableState extends State<InteractiveTable> {
                     duration: Duration(seconds: 2),
                   ),
                 );
-                return; // Don't update subjects
+                return;
               }
               widget.manager.updateClassSubjects(rowIndex, classNum, subjects);
             },
@@ -395,8 +489,6 @@ class _InteractiveTableState extends State<InteractiveTable> {
 
   void _showClassSelectionPopup(int index) {
     final TextEditingController customController = TextEditingController();
-
-    // Default classes (always present)
     final List<String> defaultClasses = [
       "Class I",
       "Class II",
@@ -412,10 +504,7 @@ class _InteractiveTableState extends State<InteractiveTable> {
       "Class XII",
     ];
 
-    // Custom classes (your starred ones)
     List<String> customClasses = List.from(widget.manager.starredClassNames);
-
-    // Selected class (current column's class)
     String selectedClass = widget.manager.data.classNames[index];
 
     showDialog(
@@ -423,7 +512,6 @@ class _InteractiveTableState extends State<InteractiveTable> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setState) {
-            // Merge custom + default classes, custom first
             List<String> allClasses = [...customClasses, ...defaultClasses];
 
             return AlertDialog(
@@ -433,7 +521,6 @@ class _InteractiveTableState extends State<InteractiveTable> {
                 height: 400,
                 child: Column(
                   children: [
-                    /// Add custom class
                     Row(
                       children: [
                         Expanded(
@@ -453,10 +540,7 @@ class _InteractiveTableState extends State<InteractiveTable> {
                             if (name.isEmpty) return;
 
                             setState(() {
-                              // Add to custom list on top
                               customClasses.insert(0, name);
-
-                              // Select it immediately
                               selectedClass = name;
                               widget.manager.toggleStarClassName(name);
                             });
@@ -468,7 +552,6 @@ class _InteractiveTableState extends State<InteractiveTable> {
                     ),
                     SizedBox(height: 16),
 
-                    /// Class list
                     Expanded(
                       child: ListView.builder(
                         itemCount: allClasses.length,
@@ -492,7 +575,6 @@ class _InteractiveTableState extends State<InteractiveTable> {
                                     icon: Icon(Icons.more_vert, size: 20),
                                     onSelected: (choice) async {
                                       if (choice == 'Edit') {
-                                        // Edit custom class
                                         final editController =
                                             TextEditingController(text: item);
                                         await showDialog(
@@ -519,8 +601,6 @@ class _InteractiveTableState extends State<InteractiveTable> {
                                                                 ),
                                                               ),
                                                         ),
-                                                    // backgroundColor: Colors.red.shade700,
-                                                    // foregroundColor: Colors.white,
                                                   ),
                                                   onPressed: () =>
                                                       Navigator.pop(context),
@@ -554,22 +634,20 @@ class _InteractiveTableState extends State<InteractiveTable> {
                                                         customClasses[idx] =
                                                             newName;
 
-                                                        // Update selection if needed
                                                         if (selectedClass ==
                                                             item) {
                                                           selectedClass =
                                                               newName;
                                                         }
 
-                                                        // Update in manager starred list
                                                         widget.manager
                                                             .toggleStarClassName(
                                                               item,
-                                                            ); // remove old
+                                                            );
                                                         widget.manager
                                                             .toggleStarClassName(
                                                               newName,
-                                                            ); // add new
+                                                            );
                                                       });
                                                       Navigator.pop(context);
                                                     }
@@ -584,7 +662,6 @@ class _InteractiveTableState extends State<InteractiveTable> {
                                         setState(() {
                                           customClasses.remove(item);
 
-                                          // Remove from starred
                                           if (widget.manager.starredClassNames
                                               .contains(item)) {
                                             widget.manager.toggleStarClassName(
@@ -592,13 +669,10 @@ class _InteractiveTableState extends State<InteractiveTable> {
                                             );
                                           }
 
-                                          // If it was selected, revert to the default class at THIS INDEX
                                           if (selectedClass == item) {
-                                            // Use the index parameter that was passed to this method!
-                                            // This tells us which column we're editing
                                             if (index < defaultClasses.length) {
                                               selectedClass =
-                                                  defaultClasses[index]; // Use the column index!
+                                                  defaultClasses[index];
                                             } else {
                                               selectedClass =
                                                   defaultClasses.first;
@@ -632,8 +706,6 @@ class _InteractiveTableState extends State<InteractiveTable> {
                     shape: const RoundedRectangleBorder(
                       borderRadius: BorderRadius.all(Radius.circular(4)),
                     ),
-                    // backgroundColor: Colors.red.shade700,
-                    // foregroundColor: Colors.white,
                   ),
                   onPressed: () => Navigator.of(context).pop(),
                   child: const Text('Cancel'),
@@ -647,7 +719,6 @@ class _InteractiveTableState extends State<InteractiveTable> {
                     foregroundColor: Colors.white,
                   ),
                   onPressed: () {
-                    // Update the class name in table column
                     widget.manager.updateClassName(index, selectedClass);
                     Navigator.pop(context);
                   },
