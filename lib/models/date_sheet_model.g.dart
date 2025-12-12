@@ -20,17 +20,18 @@ class DateSheetDataAdapter extends TypeAdapter<DateSheetData> {
       schoolName: fields[0] as String,
       dateSheetDescription: fields[1] as String,
       termDescription: fields[2] as String,
-      tableRows: (fields[3] as List).cast<TableRowData>(),
+      tableRows: (fields[3] as List?)?.cast<TableRowData>(),
       fileName: fields[4] as String,
-      createdAt: fields[5] as DateTime,
-      classNames: (fields[6] as List).cast<String>(),
+      createdAt: fields[5] as DateTime?,
+      classNames: (fields[6] as List?)?.cast<String>(),
+      logoPath: fields[7] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, DateSheetData obj) {
     writer
-      ..writeByte(7)
+      ..writeByte(8)
       ..writeByte(0)
       ..write(obj.schoolName)
       ..writeByte(1)
@@ -44,7 +45,9 @@ class DateSheetDataAdapter extends TypeAdapter<DateSheetData> {
       ..writeByte(5)
       ..write(obj.createdAt)
       ..writeByte(6)
-      ..write(obj.classNames);
+      ..write(obj.classNames)
+      ..writeByte(7)
+      ..write(obj.logoPath);
   }
 
   @override

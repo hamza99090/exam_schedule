@@ -19,7 +19,8 @@ class TableRowDataAdapter extends TypeAdapter<TableRowData> {
     return TableRowData(
       date: fields[0] as DateTime?,
       day: fields[1] as String?,
-      classSubjects: (fields[2] as Map).cast<String, List<String>>(),
+      classSubjects: (fields[2] as Map?)?.map((dynamic k, dynamic v) =>
+          MapEntry(k as String, (v as List).cast<String>())),
     );
   }
 

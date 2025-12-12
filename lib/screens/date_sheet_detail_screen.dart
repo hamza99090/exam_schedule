@@ -1,4 +1,5 @@
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:path_provider/path_provider.dart';
@@ -15,11 +16,15 @@ import '../widgets/table/interactive_table.dart';
 class DateSheetDetailScreen extends StatefulWidget {
   final DateSheetData dateSheet;
   final DateSheetManager manager;
+  final bool openInEditMode; // ← NEW
+  final bool autoDownload; // ← NEW
 
   const DateSheetDetailScreen({
     super.key,
     required this.dateSheet,
     required this.manager,
+    this.openInEditMode = false, // Default false
+    this.autoDownload = false, // Default false
   });
 
   @override
@@ -30,6 +35,71 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
   late DateSheetData _editableDateSheet;
   bool _isEditing = false;
   late DateSheetManager _tempManager; // Add this line
+  bool _hasAutoDownloaded = false; // Track if auto-download already happened
+  // ADD THESE IMAGE PICKER METHODS:
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _pickFromGallery() async {
+    try {
+      final XFile? picked = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1200,
+        maxHeight: 1200,
+        imageQuality: 85,
+      );
+      if (picked != null) {
+        setState(() {
+          _editableDateSheet.logoPath = picked.path;
+          _tempManager.updateLogoPath(picked.path);
+        });
+      }
+    } catch (e) {
+      debugPrint('Gallery pick error: $e');
+    }
+  }
+
+  Future<void> _pickFromCamera() async {
+    try {
+      final XFile? picked = await _picker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: 1200,
+        maxHeight: 1200,
+        imageQuality: 85,
+      );
+      if (picked != null) {
+        setState(() {
+          _editableDateSheet.logoPath = picked.path;
+          _tempManager.updateLogoPath(picked.path);
+        });
+      }
+    } catch (e) {
+      debugPrint('Camera pick error: $e');
+    }
+  }
+
+  void _removeImage() {
+    // Manual object creation
+    final newSheet = DateSheetData(
+      schoolName: _editableDateSheet.schoolName,
+      dateSheetDescription: _editableDateSheet.dateSheetDescription,
+      termDescription: _editableDateSheet.termDescription,
+      tableRows: List.from(
+        _editableDateSheet.tableRows,
+      ), // Important: create new list
+      fileName: _editableDateSheet.fileName,
+      createdAt: _editableDateSheet.createdAt,
+      classNames: List.from(_editableDateSheet.classNames), // Create new list
+      logoPath: null, // ← This is what matters
+    );
+
+    setState(() {
+      _editableDateSheet = newSheet;
+    });
+
+    // Update temp manager
+    _tempManager.data = newSheet;
+    _tempManager.notifyListeners();
+  }
 
   @override
   void initState() {
@@ -43,6 +113,57 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
 
     _editableDateSheet = widget.dateSheet.copyWith();
     _initializeTempManager();
+    // If opened in edit mode, enable editing immediately
+    if (widget.openInEditMode) {
+      _isEditing = true;
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // Auto-download after first build
+    if (widget.autoDownload && !_hasAutoDownloaded) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _performAutoDownload();
+      });
+    }
+  }
+
+  void _performAutoDownload() {
+    _hasAutoDownloaded = true;
+    print('=== AUTO DOWNLOAD TRIGGERED ===');
+
+    // Show preparing message
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              strokeWidth: 2.0,
+            ),
+            SizedBox(width: 16),
+            Text('Preparing PDF download...'),
+          ],
+        ),
+        backgroundColor: Colors.blue,
+        duration: Duration(seconds: 2),
+      ),
+    );
+
+    // Trigger download after short delay
+    Future.delayed(Duration(milliseconds: 500), () {
+      _downloadDateSheet();
+
+      // Automatically go back after download starts
+      Future.delayed(Duration(seconds: 1), () {
+        if (mounted) {
+          Navigator.pop(context);
+        }
+      });
+    });
   }
 
   // ADD THIS METHOD
@@ -64,6 +185,7 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
         _editableDateSheet = _tempManager.data.copyWith(
           fileName: _editableDateSheet.fileName,
           createdAt: _editableDateSheet.createdAt,
+          logoPath: _tempManager.logoPath, // ADD THIS LINE
         );
       });
     });
@@ -597,18 +719,20 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
         foregroundColor: Colors.white,
 
         actions: [
-          // Add Download button here (first in the list)
-          if (!_isEditing)
+          // Show edit button only if NOT in auto-download mode
+          if (!widget.autoDownload && !_isEditing)
             IconButton(
               icon: const Icon(Icons.edit),
               onPressed: _toggleEditing,
               tooltip: 'Edit Date Sheet',
             ),
-          IconButton(
-            icon: const Icon(Icons.download),
-            onPressed: _downloadDateSheet,
-            tooltip: 'Download as PDF',
-          ),
+          // Download button - show only if NOT in auto-download mode
+          if (!widget.autoDownload)
+            IconButton(
+              icon: const Icon(Icons.download),
+              onPressed: _downloadDateSheet,
+              tooltip: 'Download as PDF',
+            ),
           // if (_isEditing) ...[
           //   IconButton(
           //     icon: const Icon(Icons.cancel),
@@ -651,21 +775,113 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
-            // ADD LOGO HERE
-            if (_editableDateSheet.logoPath != null &&
-                _editableDateSheet.logoPath!.isNotEmpty)
+            // LOGO SECTION - Editable in edit mode
+            if (_isEditing) ...[
+              Text(
+                'Upload Logo here',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue.shade800,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Center(
+                child: Column(
+                  children: [
+                    CircleAvatar(
+                      radius: 48,
+                      backgroundColor: Colors.grey.shade200,
+                      backgroundImage:
+                          (_editableDateSheet.logoPath != null &&
+                              _editableDateSheet.logoPath!.isNotEmpty)
+                          ? FileImage(File(_editableDateSheet.logoPath!))
+                                as ImageProvider
+                          : null,
+                      child:
+                          (_editableDateSheet.logoPath == null ||
+                              _editableDateSheet.logoPath!.isEmpty)
+                          ? Icon(
+                              Icons.add_photo_alternate_sharp,
+                              size: 48,
+                              color: Colors.grey.shade600,
+                            )
+                          : null,
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: _pickFromGallery,
+                          icon: const Icon(Icons.photo_library, size: 20),
+                          label: const Text('Gallery'),
+                          style: ElevatedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(4),
+                              ),
+                            ),
+                            backgroundColor: Colors.blue.shade700,
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                        ElevatedButton.icon(
+                          onPressed: _pickFromCamera,
+                          icon: const Icon(Icons.camera_alt, size: 20),
+                          label: const Text('Camera'),
+                          style: ElevatedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(4),
+                              ),
+                            ),
+                            backgroundColor: Colors.blue.shade700,
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                        if (_editableDateSheet.logoPath != null &&
+                            _editableDateSheet.logoPath!.isNotEmpty)
+                          OutlinedButton.icon(
+                            onPressed: _removeImage,
+                            icon: const Icon(Icons.delete_outline, size: 20),
+                            label: const Text('Remove'),
+                            style: OutlinedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(4),
+                                ),
+                              ),
+                              backgroundColor: Colors.blue.shade700,
+                              foregroundColor: Colors.white,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ] else if (_editableDateSheet.logoPath != null &&
+                _editableDateSheet.logoPath!.isNotEmpty) ...[
+              // Show logo in view mode if exists
               Container(
                 margin: const EdgeInsets.only(bottom: 16),
                 child: CircleAvatar(
-                  radius: 40,
+                  radius: 48,
                   backgroundColor: Colors.grey.shade200,
-                  backgroundImage: FileImage(
-                    File(_editableDateSheet.logoPath!),
-                  ),
+                  backgroundImage:
+                      FileImage(File(_editableDateSheet.logoPath!))
+                          as ImageProvider,
                 ),
               ),
+            ],
 
-            // School Name - Only editable when in edit mode
+            const SizedBox(height: 12),
+
+            // // School Name - Editable when in edit mode
             // _isEditing
             //     ? TextFormField(
             //         initialValue: _editableDateSheet.schoolName,
@@ -698,7 +914,6 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
 
             // const SizedBox(height: 12),
 
-            // // Rest of your existing code...
             // // Date Sheet Description
             // _isEditing
             //     ? TextFormField(
@@ -730,7 +945,7 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
 
             // const SizedBox(height: 8),
 
-            // // Term Description
+            // Term Description
             // _isEditing
             //     ? TextFormField(
             //         initialValue: _editableDateSheet.termDescription,
@@ -752,8 +967,7 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
             //         style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
             //         textAlign: TextAlign.center,
             //       ),
-
-            // const SizedBox(height: 16),
+            const SizedBox(height: 16),
             Text(
               '${_isEditing ? 'Editing' : 'Saved'} on: ${_formatDate(_editableDateSheet.createdAt)}',
               style: TextStyle(

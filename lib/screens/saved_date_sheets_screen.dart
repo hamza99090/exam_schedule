@@ -73,7 +73,6 @@ class _SavedDateSheetsScreenState extends State<SavedDateSheetsScreen> {
     return Card(
       margin: const EdgeInsets.all(8.0),
       child: ListTile(
-        // leading: const Icon(Icons.assignment, color: Colors.blue),
         title: Text(
           dateSheet.fileName,
           style: const TextStyle(fontWeight: FontWeight.bold),
@@ -100,28 +99,157 @@ class _SavedDateSheetsScreenState extends State<SavedDateSheetsScreen> {
                 color: Colors.grey.shade600,
                 size: 20,
               ),
-              onSelected: (value) {
-                if (value == 'delete') {
+              onSelected: (value) async {
+                if (value == 'rename') {
+                  await _renameDateSheet(context, index, dateSheet);
+                } else if (value == 'edit') {
+                  _openForEdit(context, dateSheet);
+                } else if (value == 'download') {
+                  _openForDownload(context, dateSheet);
+                } else if (value == 'delete') {
                   _deleteDateSheet(context, index);
                 }
               },
               itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
                 PopupMenuItem<String>(
+                  value: 'rename',
+                  child: Row(
+                    children: [
+                      Icon(Icons.edit_note, color: Colors.blue),
+                      SizedBox(width: 12),
+                      Text('Rename'),
+                    ],
+                  ),
+                ),
+                PopupMenuItem<String>(
+                  value: 'edit',
+                  child: Row(
+                    children: [
+                      Icon(Icons.edit, color: Colors.green),
+                      SizedBox(width: 12),
+                      Text('Edit'),
+                    ],
+                  ),
+                ),
+                PopupMenuItem<String>(
+                  value: 'download',
+                  child: Row(
+                    children: [
+                      Icon(Icons.download, color: Colors.purple),
+                      SizedBox(width: 12),
+                      Text('Download PDF'),
+                    ],
+                  ),
+                ),
+                PopupMenuItem<String>(
                   value: 'delete',
                   child: Row(
                     children: [
-                      Icon(Icons.delete_outline),
+                      Icon(Icons.delete_outline, color: Colors.red),
                       SizedBox(width: 12),
                       Text('Delete'),
                     ],
                   ),
                 ),
               ],
-              padding: EdgeInsets.all(4), // Adjust padding as needed
+              padding: EdgeInsets.all(4),
             ),
           ],
         ),
         onTap: () => _viewDateSheet(context, dateSheet),
+      ),
+    );
+  }
+
+  // Rename functionality
+  Future<void> _renameDateSheet(
+    BuildContext context,
+    int index,
+    DateSheetData dateSheet,
+  ) async {
+    final TextEditingController renameController = TextEditingController(
+      text: dateSheet.fileName,
+    );
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Rename Date Sheet'),
+        content: TextField(
+          controller: renameController,
+          autofocus: true,
+          decoration: InputDecoration(
+            labelText: 'New Name',
+            border: OutlineInputBorder(),
+          ),
+          onSubmitted: (value) {
+            _performRename(index, value.trim());
+            Navigator.pop(context);
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue.shade700,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              final newName = renameController.text.trim();
+              if (newName.isNotEmpty) {
+                _performRename(index, newName);
+                Navigator.pop(context);
+              }
+            },
+            child: Text('Rename'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _performRename(int index, String newName) {
+    final dateSheet = widget.manager.savedDateSheets[index];
+    final updatedSheet = dateSheet.copyWith(fileName: newName);
+    widget.manager.updateSavedDateSheet(index, updatedSheet);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Renamed to "$newName"'),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
+  // Open in edit mode (with edit mode enabled)
+  void _openForEdit(BuildContext context, DateSheetData dateSheet) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DateSheetDetailScreen(
+          dateSheet: dateSheet,
+          manager: widget.manager,
+          openInEditMode: true, // ← NEW PARAMETER
+        ),
+      ),
+    ).then((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  // Open for download (automatically trigger download)
+  void _openForDownload(BuildContext context, DateSheetData dateSheet) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DateSheetDetailScreen(
+          dateSheet: dateSheet,
+          manager: widget.manager,
+          autoDownload: true, // ← NEW PARAMETER
+        ),
       ),
     );
   }
