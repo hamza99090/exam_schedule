@@ -607,11 +607,15 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
   }
 
   pw.Widget _buildPDFTable(bool isLandscape) {
+    // 1. FIRST CHANGE: Original class names ka order preserve karein
+    final List<String> originalClassNames = _editableDateSheet.classNames;
+
     // Filter to only include classes that have at least one subject in any row
     final classesWithData = <String>{};
 
     for (var row in _editableDateSheet.tableRows) {
-      for (var className in _editableDateSheet.classNames) {
+      for (var className in originalClassNames) {
+        // 2. SECOND CHANGE: originalClassNames use karein
         final subjects = row.classSubjects[className];
         if (subjects != null &&
             subjects.isNotEmpty &&
@@ -626,9 +630,12 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
       'S.No',
       'Date',
       'Day',
+      // 3. THIRD CHANGE: Original order mein classes add karein
       ...(classesWithData.isNotEmpty
-          ? classesWithData.toList()
-          : _editableDateSheet.classNames),
+          ? originalClassNames
+                .where((className) => classesWithData.contains(className))
+                .toList()
+          : originalClassNames),
     ];
 
     final rows = _editableDateSheet.tableRows.asMap().entries.map((entry) {
@@ -645,9 +652,12 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
       ];
 
       // Add data only for classes with data (or all classes if none have data)
+      // 4. FOURTH CHANGE: Original order mein classesToShow banaein
       final classesToShow = classesWithData.isNotEmpty
-          ? classesWithData.toList()
-          : _editableDateSheet.classNames;
+          ? originalClassNames
+                .where((className) => classesWithData.contains(className))
+                .toList()
+          : originalClassNames;
 
       for (var className in classesToShow) {
         if (row.classSubjects.containsKey(className)) {
