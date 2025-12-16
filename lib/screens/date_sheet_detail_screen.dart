@@ -503,49 +503,66 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
         margin: const pw.EdgeInsets.all(20),
         build: (pw.Context context) {
           return [
-            // Logo and School Name in a Row
-            if (logoBytes != null)
-              pw.Center(
-                child: pw.Container(
-                  width: 60,
-                  height: 60,
-                  margin: const pw.EdgeInsets.only(bottom: 15),
-                  child: pw.Image(
-                    pw.MemoryImage(logoBytes),
-                    fit: pw.BoxFit.contain,
+            // Logo aur School Name ek row mein
+            pw.Row(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                // Logo (left side)
+                if (logoBytes != null)
+                  pw.Container(
+                    width: 60,
+                    height: 60,
+                    margin: const pw.EdgeInsets.only(right: 15),
+                    child: pw.Image(
+                      pw.MemoryImage(logoBytes),
+                      fit: pw.BoxFit.contain,
+                    ),
+                  ),
+
+                // School Name aur Description (right side)
+                pw.Expanded(
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.center,
+                    children: [
+                      // School Name
+                      pw.Text(
+                        _editableDateSheet.schoolName,
+                        style: pw.TextStyle(
+                          fontSize: shouldUseLandscape ? 22 : 24,
+                          fontWeight: pw.FontWeight.bold,
+                        ),
+                        textAlign: pw.TextAlign.center,
+                      ),
+
+                      pw.SizedBox(height: 8),
+
+                      // Date Sheet Description
+                      pw.Text(
+                        _editableDateSheet.dateSheetDescription,
+                        style: pw.TextStyle(
+                          fontSize: shouldUseLandscape ? 16 : 18,
+                          fontWeight: pw.FontWeight.bold,
+                        ),
+                        textAlign: pw.TextAlign.center,
+                      ),
+
+                      pw.SizedBox(height: 6),
+
+                      // Term Description
+                      pw.Text(
+                        _editableDateSheet.termDescription,
+                        style: pw.TextStyle(
+                          fontSize: shouldUseLandscape ? 12 : 14,
+                        ),
+                        textAlign: pw.TextAlign.center,
+                      ),
+                    ],
                   ),
                 ),
-              ),
 
-            // School Name
-            pw.Text(
-              _editableDateSheet.schoolName,
-              style: pw.TextStyle(
-                fontSize: shouldUseLandscape ? 22 : 24,
-                fontWeight: pw.FontWeight.bold,
-              ),
-              textAlign: pw.TextAlign.center,
-            ),
-
-            pw.SizedBox(height: 10),
-
-            // Date Sheet Description
-            pw.Text(
-              _editableDateSheet.dateSheetDescription,
-              style: pw.TextStyle(
-                fontSize: shouldUseLandscape ? 16 : 18,
-                fontWeight: pw.FontWeight.bold,
-              ),
-              textAlign: pw.TextAlign.center,
-            ),
-
-            pw.SizedBox(height: 8),
-
-            // Term Description
-            pw.Text(
-              _editableDateSheet.termDescription,
-              style: pw.TextStyle(fontSize: shouldUseLandscape ? 12 : 14),
-              textAlign: pw.TextAlign.center,
+                // Agar logo nahi hai to spacer add karein
+                if (logoBytes == null) pw.SizedBox(width: 0),
+              ],
             ),
 
             pw.SizedBox(height: 20),
@@ -554,6 +571,7 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
             pw.Text(
               'Generated on: ${_formatDateForPDF(DateTime.now())}',
               style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic),
+              textAlign: pw.TextAlign.center,
             ),
 
             pw.SizedBox(height: 30),
@@ -563,7 +581,7 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
 
             pw.SizedBox(height: 30),
 
-            // // Footer
+            // Footer (optional)
             // pw.Text(
             //   'Official document - ${_editableDateSheet.schoolName}',
             //   style: pw.TextStyle(fontSize: 9, fontStyle: pw.FontStyle.italic),
@@ -783,210 +801,10 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
       margin: const EdgeInsets.all(16.0),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            // LOGO SECTION - Editable in edit mode
-            if (_isEditing) ...[
-              Text(
-                'Upload Logo here',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue.shade800,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Center(
-                child: Column(
-                  children: [
-                    CircleAvatar(
-                      radius: 48,
-                      backgroundColor: Colors.grey.shade200,
-                      backgroundImage:
-                          (_editableDateSheet.logoPath != null &&
-                              _editableDateSheet.logoPath!.isNotEmpty)
-                          ? FileImage(File(_editableDateSheet.logoPath!))
-                                as ImageProvider
-                          : null,
-                      child:
-                          (_editableDateSheet.logoPath == null ||
-                              _editableDateSheet.logoPath!.isEmpty)
-                          ? Icon(
-                              Icons.add_photo_alternate_sharp,
-                              size: 48,
-                              color: Colors.grey.shade600,
-                            )
-                          : null,
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        ElevatedButton.icon(
-                          onPressed: _pickFromGallery,
-                          icon: const Icon(Icons.photo_library, size: 20),
-                          label: const Text('Gallery'),
-                          style: ElevatedButton.styleFrom(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(4),
-                              ),
-                            ),
-                            backgroundColor: Colors.blue.shade700,
-                            foregroundColor: Colors.white,
-                          ),
-                        ),
-                        ElevatedButton.icon(
-                          onPressed: _pickFromCamera,
-                          icon: const Icon(Icons.camera_alt, size: 20),
-                          label: const Text('Camera'),
-                          style: ElevatedButton.styleFrom(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(4),
-                              ),
-                            ),
-                            backgroundColor: Colors.blue.shade700,
-                            foregroundColor: Colors.white,
-                          ),
-                        ),
-                        if (_editableDateSheet.logoPath != null &&
-                            _editableDateSheet.logoPath!.isNotEmpty)
-                          OutlinedButton.icon(
-                            onPressed: _removeImage,
-                            icon: const Icon(Icons.delete_outline, size: 20),
-                            label: const Text('Remove'),
-                            style: OutlinedButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(4),
-                                ),
-                              ),
-                              backgroundColor: Colors.blue.shade700,
-                              foregroundColor: Colors.white,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-            ] else if (_editableDateSheet.logoPath != null &&
-                _editableDateSheet.logoPath!.isNotEmpty) ...[
-              // Show logo in view mode if exists
-              Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                child: CircleAvatar(
-                  radius: 48,
-                  backgroundColor: Colors.grey.shade200,
-                  backgroundImage:
-                      FileImage(File(_editableDateSheet.logoPath!))
-                          as ImageProvider,
-                ),
-              ),
-            ],
-
-            const SizedBox(height: 12),
-
-            // // School Name - Editable when in edit mode
-            // _isEditing
-            //     ? TextFormField(
-            //         initialValue: _editableDateSheet.schoolName,
-            //         onChanged: (value) {
-            //           setState(() {
-            //             _editableDateSheet.schoolName = value;
-            //             _tempManager.updateSchoolName(value);
-            //           });
-            //         },
-            //         style: TextStyle(
-            //           fontSize: 20,
-            //           fontWeight: FontWeight.bold,
-            //           color: Colors.blue.shade800,
-            //         ),
-            //         textAlign: TextAlign.center,
-            //         decoration: const InputDecoration(
-            //           border: InputBorder.none,
-            //           contentPadding: EdgeInsets.zero,
-            //         ),
-            //       )
-            //     : Text(
-            //         _editableDateSheet.schoolName,
-            //         style: TextStyle(
-            //           fontSize: 20,
-            //           fontWeight: FontWeight.bold,
-            //           color: Colors.blue.shade800,
-            //         ),
-            //         textAlign: TextAlign.center,
-            //       ),
-
-            // const SizedBox(height: 12),
-
-            // // Date Sheet Description
-            // _isEditing
-            //     ? TextFormField(
-            //         initialValue: _editableDateSheet.dateSheetDescription,
-            //         onChanged: (value) {
-            //           setState(() {
-            //             _editableDateSheet.dateSheetDescription = value;
-            //             _tempManager.updateDateSheetDescription(value);
-            //           });
-            //         },
-            //         style: const TextStyle(
-            //           fontSize: 16,
-            //           fontWeight: FontWeight.w600,
-            //         ),
-            //         textAlign: TextAlign.center,
-            //         decoration: const InputDecoration(
-            //           border: InputBorder.none,
-            //           contentPadding: EdgeInsets.zero,
-            //         ),
-            //       )
-            //     : Text(
-            //         _editableDateSheet.dateSheetDescription,
-            //         style: const TextStyle(
-            //           fontSize: 16,
-            //           fontWeight: FontWeight.w600,
-            //         ),
-            //         textAlign: TextAlign.center,
-            //       ),
-
-            // const SizedBox(height: 8),
-
-            // Term Description
-            // _isEditing
-            //     ? TextFormField(
-            //         initialValue: _editableDateSheet.termDescription,
-            //         onChanged: (value) {
-            //           setState(() {
-            //             _editableDateSheet.termDescription = value;
-            //             _tempManager.updateTermDescription(value);
-            //           });
-            //         },
-            //         style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
-            //         textAlign: TextAlign.center,
-            //         decoration: const InputDecoration(
-            //           border: InputBorder.none,
-            //           contentPadding: EdgeInsets.zero,
-            //         ),
-            //       )
-            //     : Text(
-            //         _editableDateSheet.termDescription,
-            //         style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
-            //         textAlign: TextAlign.center,
-            //       ),
-            const SizedBox(height: 16),
-            Text(
-              '${_isEditing ? 'Editing' : 'Saved'} on: ${_formatDate(_editableDateSheet.createdAt)}',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade600,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-          ],
+        child: HeaderSection(
+          manager: _tempManager,
+          formKey: GlobalKey<FormState>(),
+          isEditing: _isEditing,
         ),
       ),
     );

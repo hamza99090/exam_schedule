@@ -71,13 +71,13 @@ class DateSheetManager extends ChangeNotifier {
     return ['English', 'Math'];
   }
 
-  void updateSchoolName(String name) {
-    _data.schoolName = name;
+  void updateSchoolName(String schoolName) {
+    _data = _data.copyWith(schoolName: schoolName);
     notifyListeners();
   }
 
   void updateDateSheetDescription(String description) {
-    _data.dateSheetDescription = description;
+    _data = _data.copyWith(dateSheetDescription: description);
     notifyListeners();
   }
 

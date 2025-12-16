@@ -295,6 +295,7 @@ class _DateSheetScreenState extends State<DateSheetScreen> {
                       HeaderSection(
                         manager: widget.manager,
                         formKey: _headerFormKey,
+                        isEditing: true,
                       ),
 
                       const SizedBox(height: 24),
