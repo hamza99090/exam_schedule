@@ -258,31 +258,19 @@ class _InteractiveTableState extends State<InteractiveTable> {
                 // FIXED ACTION COLUMN (right side, doesn't scroll)
                 if (widget.isEditing)
                   Container(
-                    width: 70, // Fixed width
-                    margin: EdgeInsets.only(left: 8),
+                    width: 50, // Very small width
+                    decoration: BoxDecoration(
+                      border: Border(
+                        left: BorderSide(
+                          color: Colors.grey.shade300, // ✅ VERTICAL LINE
+                          width: 1.0,
+                        ),
+                      ),
+                    ),
                     child: Column(
                       children: [
-                        // Action column header
-                        Container(
-                          height: 42,
-                          decoration: BoxDecoration(
-                            color: Colors.blue.shade600,
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(4),
-                              topRight: Radius.circular(4),
-                            ),
-                          ),
-                          child: Center(
-                            child: Text(
-                              'Action',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
-                        ),
+                        // EMPTY SPACE FOR HEADER
+                        SizedBox(height: 42),
 
                         // Action buttons for each row
                         ...widget.manager.data.tableRows.asMap().entries.map((
@@ -290,68 +278,48 @@ class _InteractiveTableState extends State<InteractiveTable> {
                         ) {
                           final index = e.key;
                           return Container(
-                            height: 52, // Match table row height
-                            decoration: BoxDecoration(
-                              border: Border(
-                                bottom: BorderSide(
-                                  color: Colors.grey.shade200,
-                                  width: 0.3,
-                                ),
-                                left: BorderSide(
-                                  color: Colors.grey.shade200,
-                                  width: 0.3,
-                                ),
-                                right: BorderSide(
-                                  color: Colors.grey.shade200,
-                                  width: 0.3,
-                                ),
+                            height: 52,
+                            child: PopupMenuButton<String>(
+                              icon: Icon(
+                                Icons.more_vert,
+                                color: Colors.blue, // ✅ BLUE COLOR
+                                size: 20,
                               ),
-                            ),
-                            child: Center(
-                              child: PopupMenuButton<String>(
-                                icon: Icon(
-                                  Icons.more_vert,
-                                  color: Colors.grey.shade600,
-                                  size: 20,
-                                ),
-                                onSelected: (value) {
-                                  if (value == 'reset') {
-                                    _resetRow(index);
-                                  } else if (value == 'delete') {
-                                    _showDeleteConfirmation(index);
-                                  }
-                                },
-                                itemBuilder: (BuildContext context) =>
-                                    <PopupMenuEntry<String>>[
-                                      PopupMenuItem<String>(
-                                        value: 'reset',
-                                        child: Row(
-                                          children: [
-                                            Icon(
-                                              Icons.restart_alt,
-                                              color: Colors.blue,
-                                            ),
-                                            SizedBox(width: 8),
-                                            Text('Reset'),
-                                          ],
-                                        ),
+                              onSelected: (value) {
+                                if (value == 'reset') {
+                                  _resetRow(index);
+                                } else if (value == 'delete') {
+                                  _showDeleteConfirmation(index);
+                                }
+                              },
+                              itemBuilder: (context) => [
+                                PopupMenuItem(
+                                  value: 'reset',
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.restart_alt,
+                                        color: Colors.blue,
                                       ),
-                                      PopupMenuItem<String>(
-                                        value: 'delete',
-                                        child: Row(
-                                          children: [
-                                            Icon(
-                                              Icons.delete_outline,
-                                              color: Colors.red,
-                                            ),
-                                            SizedBox(width: 8),
-                                            Text('Delete'),
-                                          ],
-                                        ),
-                                      ),
+                                      SizedBox(width: 8),
+                                      Text('Reset'),
                                     ],
-                                padding: EdgeInsets.all(4),
-                              ),
+                                  ),
+                                ),
+                                PopupMenuItem(
+                                  value: 'delete',
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.delete_outline,
+                                        color: Colors.red,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text('Delete'),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           );
                         }).toList(),

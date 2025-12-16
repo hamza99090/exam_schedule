@@ -391,14 +391,7 @@ class _DateSheetScreenState extends State<DateSheetScreen> {
                         padding: const EdgeInsets.only(top: 16.0),
                         child: Container(
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.blue.shade600,
-                                Colors.blue.shade800,
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
+                            color: Colors.blue.shade700,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: ElevatedButton.icon(
