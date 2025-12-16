@@ -148,24 +148,26 @@ class _InteractiveTableState extends State<InteractiveTable> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // ✅ FIXED ACTION COLUMN (LEFT SIDE - DOESN'T SCROLL)
+                // ✅ SIMPLE WORKING VERSION
                 if (widget.isEditing)
                   Container(
-                    width: 50,
-
+                    width: 25,
                     child: Column(
+                      mainAxisSize: MainAxisSize.min, // Important
                       children: [
-                        // HEADER - EMPTY WHITE SPACE
-                        Container(height: 42),
+                        // HEADER
+                        Container(height: 42, width: 25, color: Colors.white),
 
-                        // ACTION BUTTONS FOR EACH ROW
+                        // ROWS - NO SCROLL VIEW
                         ...widget.manager.data.tableRows.asMap().entries.map((
                           e,
                         ) {
                           final index = e.key;
-                          return Container(
+                          return SizedBox(
                             height: 52,
-                            decoration: BoxDecoration(),
+                            width: 25,
                             child: PopupMenuButton<String>(
+                              padding: EdgeInsets.zero,
                               icon: Icon(
                                 Icons.more_vert,
                                 color: Colors.blue.shade700,
@@ -223,7 +225,10 @@ class _InteractiveTableState extends State<InteractiveTable> {
                       controller: _horizontalScrollController,
                       scrollDirection: Axis.horizontal,
                       child: Container(
-                        margin: const EdgeInsets.only(bottom: 10.0),
+                        margin: const EdgeInsets.only(
+                          bottom: 10.0,
+                          right: 14.0,
+                        ),
                         child: DataTable(
                           headingTextStyle: TextStyle(
                             fontWeight: FontWeight.w600,
@@ -333,47 +338,47 @@ class _InteractiveTableState extends State<InteractiveTable> {
     );
   }
 
-  DataCell _buildActionCell(int index) {
-    return DataCell(
-      Container(
-        width: 50,
-        height: 52,
-        alignment: Alignment.centerLeft,
-        child: PopupMenuButton<String>(
-          icon: Icon(Icons.more_vert, color: Colors.blue.shade700, size: 20),
-          onSelected: (value) {
-            if (value == 'reset') {
-              _resetRow(index);
-            } else if (value == 'delete') {
-              _showDeleteConfirmation(index);
-            }
-          },
-          itemBuilder: (context) => [
-            PopupMenuItem(
-              value: 'reset',
-              child: Row(
-                children: [
-                  Icon(Icons.restart_alt, color: Colors.blue),
-                  SizedBox(width: 8),
-                  Text('Reset'),
-                ],
-              ),
-            ),
-            PopupMenuItem(
-              value: 'delete',
-              child: Row(
-                children: [
-                  Icon(Icons.delete_outline, color: Colors.red),
-                  SizedBox(width: 8),
-                  Text('Delete'),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // DataCell _buildActionCell(int index) {
+  //   return DataCell(
+  //     Container(
+  //       width: 50,
+  //       height: 52,
+  //       alignment: Alignment.centerLeft,
+  //       child: PopupMenuButton<String>(
+  //         icon: Icon(Icons.more_vert, color: Colors.blue.shade700, size: 20),
+  //         onSelected: (value) {
+  //           if (value == 'reset') {
+  //             _resetRow(index);
+  //           } else if (value == 'delete') {
+  //             _showDeleteConfirmation(index);
+  //           }
+  //         },
+  //         itemBuilder: (context) => [
+  //           PopupMenuItem(
+  //             value: 'reset',
+  //             child: Row(
+  //               children: [
+  //                 Icon(Icons.restart_alt, color: Colors.blue),
+  //                 SizedBox(width: 8),
+  //                 Text('Reset'),
+  //               ],
+  //             ),
+  //           ),
+  //           PopupMenuItem(
+  //             value: 'delete',
+  //             child: Row(
+  //               children: [
+  //                 Icon(Icons.delete_outline, color: Colors.red),
+  //                 SizedBox(width: 8),
+  //                 Text('Delete'),
+  //               ],
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget _buildClassNameEditor(int index, String currentName) {
     if (index >= _classControllers.length) {

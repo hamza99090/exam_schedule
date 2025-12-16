@@ -286,63 +286,37 @@ class _DateSheetScreenState extends State<DateSheetScreen> {
               return SingleChildScrollView(
                 controller: _scrollController,
                 padding: const EdgeInsets.all(16.0),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Header Section
-                      HeaderSection(
-                        manager: widget.manager,
-                        formKey: _headerFormKey,
-                        isEditing: true,
-                      ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Header Section
+                    HeaderSection(
+                      manager: widget.manager,
+                      formKey: _headerFormKey,
+                      isEditing: true,
+                    ),
 
-                      const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
-                      // "Create Date Sheet" title
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Create Date Sheet',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue.shade900,
-                            ),
+                    // "Create Date Sheet" title
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Create Date Sheet',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue.shade900,
                           ),
-                          ElevatedButton.icon(
-                            onPressed: () {
-                              // If a header Form exists, validate it first. Otherwise proceed.
-                              final formState = _headerFormKey.currentState;
-                              if (formState != null) {
-                                if (formState.validate()) {
-                                  // Check if there's data to save
-                                  if (widget.manager.hasData) {
-                                    _showSaveDialog();
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Please add some subjects before saving.',
-                                        ),
-                                        backgroundColor: Colors.red,
-                                      ),
-                                    );
-                                  }
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Please fill required fields before saving.',
-                                      ),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
-                                }
-                              } else {
-                                // No form in header (image-only header), check data
+                        ),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            // If a header Form exists, validate it first. Otherwise proceed.
+                            final formState = _headerFormKey.currentState;
+                            if (formState != null) {
+                              if (formState.validate()) {
+                                // Check if there's data to save
                                 if (widget.manager.hasData) {
                                   _showSaveDialog();
                                 } else {
@@ -355,68 +329,91 @@ class _DateSheetScreenState extends State<DateSheetScreen> {
                                     ),
                                   );
                                 }
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Please fill required fields before saving.',
+                                    ),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
                               }
-                            },
-                            icon: const Icon(Icons.save, size: 20),
-                            label: const Text('Save'),
-                            style: ElevatedButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(4),
-                                ),
-                              ),
-                              backgroundColor: Colors.blue.shade700,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 10,
+                            } else {
+                              // No form in header (image-only header), check data
+                              if (widget.manager.hasData) {
+                                _showSaveDialog();
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Please add some subjects before saving.',
+                                    ),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                          icon: const Icon(Icons.save, size: 20),
+                          label: const Text('Save'),
+                          style: ElevatedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(4),
                               ),
                             ),
+                            backgroundColor: Colors.blue.shade700,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
                           ),
-                        ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Replace the InteractiveTable section (around line 265-268) with:
+                    if (_showTable) ...[
+                      // Interactive Table - This grows with rows
+                      InteractiveTable(
+                        manager: widget.manager,
+                        isEditing: true,
                       ),
                       const SizedBox(height: 16),
+                    ],
 
-                      // Replace the InteractiveTable section (around line 265-268) with:
-                      if (_showTable) ...[
-                        // Interactive Table - This grows with rows
-                        InteractiveTable(
-                          manager: widget.manager,
-                          isEditing: true,
+                    // Add New Row Button - Outside the card, moves down as table grows
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16.0),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade700,
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        const SizedBox(height: 16),
-                      ],
-
-                      // Add New Row Button - Outside the card, moves down as table grows
-                      Padding(
-                        padding: const EdgeInsets.only(top: 16.0),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.blue.shade700,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: ElevatedButton.icon(
-                            onPressed: _addNewRowAndScroll,
-                            icon: const Icon(Icons.add),
-                            label: const Text('Add New Row'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 16,
-                                horizontal: 32,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-
-                              elevation: 0,
+                        child: ElevatedButton.icon(
+                          onPressed: _addNewRowAndScroll,
+                          icon: const Icon(Icons.add),
+                          label: const Text('Add New Row'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 16,
+                              horizontal: 32,
                             ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+
+                            elevation: 0,
                           ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               );
             },

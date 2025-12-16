@@ -112,13 +112,65 @@ class _HeaderSectionState extends State<HeaderSection> {
   // Method to save school name to manager
   void _saveSchoolName(String value) {
     if (value.trim().isNotEmpty) {
-      widget.manager.updateSchoolName(value.trim());
+      widget.manager.updateSchoolName(value);
     }
   }
 
   // Method to save exam description to manager
   void _saveExamDescription(String value) {
-    widget.manager.updateDateSheetDescription(value.trim());
+    widget.manager.updateDateSheetDescription(value);
+  }
+
+  // Show image picker options (Gallery or Camera)
+  Future<void> _showImagePickerOptions() async {
+    return showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(Icons.photo_library, color: Colors.blue),
+                title: Text('Choose from Gallery'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickFromGallery();
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.camera_alt, color: Colors.blue),
+                title: Text('Take a Photo'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickFromCamera();
+                },
+              ),
+              if (_imagePath != null && _imagePath!.isNotEmpty)
+                ListTile(
+                  leading: Icon(Icons.delete, color: Colors.red),
+                  title: Text(
+                    'Remove Image',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _removeImage();
+                  },
+                ),
+              ListTile(
+                leading: Icon(Icons.cancel, color: Colors.grey),
+                title: Text('Cancel'),
+                onTap: () => Navigator.pop(context),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   // Show dialog for editing header info
@@ -255,111 +307,43 @@ class _HeaderSectionState extends State<HeaderSection> {
       elevation: 4,
       child: Padding(
         padding: const EdgeInsets.all(20.0),
-        child: Column(
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Logo upload section
+            // ✅ IMAGE UPLOAD SECTION (LEFT)
             Column(
               children: [
-                Text(
-                  'Upload Logo here',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue.shade800,
+                GestureDetector(
+                  onTap: widget.isEditing ? _showImagePickerOptions : null,
+                  child: CircleAvatar(
+                    radius: 25,
+                    backgroundColor: Colors.grey.shade200,
+                    backgroundImage:
+                        (_imagePath != null && _imagePath!.isNotEmpty)
+                        ? FileImage(File(_imagePath!)) as ImageProvider
+                        : null,
+                    child: (_imagePath == null || _imagePath!.isEmpty)
+                        ? Icon(
+                            Icons.add_photo_alternate_sharp,
+                            size: 48,
+                            color: Colors.grey.shade600,
+                          )
+                        : null,
                   ),
                 ),
-                const SizedBox(height: 16),
-                Center(
-                  child: Column(
-                    children: [
-                      CircleAvatar(
-                        radius: 48,
-                        backgroundColor: Colors.grey.shade200,
-                        backgroundImage:
-                            (_imagePath != null && _imagePath!.isNotEmpty)
-                            ? FileImage(File(_imagePath!)) as ImageProvider
-                            : null,
-                        child: (_imagePath == null || _imagePath!.isEmpty)
-                            ? Icon(
-                                Icons.add_photo_alternate_sharp,
-                                size: 48,
-                                color: Colors.grey.shade600,
-                              )
-                            : null,
-                      ),
-                      const SizedBox(height: 12),
-                      if (widget.isEditing) // Show buttons only in edit mode
-                        Wrap(
-                          alignment: WrapAlignment.center,
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            ElevatedButton.icon(
-                              onPressed: _pickFromGallery,
-                              icon: const Icon(Icons.photo_library, size: 20),
-                              label: const Text('Gallery'),
-                              style: ElevatedButton.styleFrom(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(4),
-                                  ),
-                                ),
-                                backgroundColor: Colors.blue.shade700,
-                                foregroundColor: Colors.white,
-                              ),
-                            ),
-                            ElevatedButton.icon(
-                              onPressed: _pickFromCamera,
-                              icon: const Icon(Icons.camera_alt, size: 20),
-                              label: const Text('Camera'),
-                              style: ElevatedButton.styleFrom(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(4),
-                                  ),
-                                ),
-                                backgroundColor: Colors.blue.shade700,
-                                foregroundColor: Colors.white,
-                              ),
-                            ),
-                            if (_imagePath != null && _imagePath!.isNotEmpty)
-                              OutlinedButton.icon(
-                                onPressed: _removeImage,
-                                icon: const Icon(
-                                  Icons.delete_outline,
-                                  size: 20,
-                                ),
-                                label: const Text('Remove'),
-                                style: OutlinedButton.styleFrom(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(4),
-                                    ),
-                                  ),
-                                  backgroundColor: Colors.blue.shade700,
-                                  foregroundColor: Colors.white,
-                                ),
-                              ),
-                          ],
-                        ),
-                    ],
+                const SizedBox(height: 8),
+                if (widget.isEditing)
+                  Text(
+                    'Tap to upload',
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                   ),
-                ),
               ],
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(width: 20),
 
-            // Header Information Display with Edit Button
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade300),
-              ),
+            // ✅ HEADER INFORMATION CARD (RIGHT) - EXPANDED
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -367,7 +351,7 @@ class _HeaderSectionState extends State<HeaderSection> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Header Information',
+                        'School Information',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,

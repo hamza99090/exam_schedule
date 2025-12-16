@@ -796,16 +796,12 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
   }
 
   Widget _buildHeaderCard() {
-    return Card(
-      elevation: 4,
-      margin: const EdgeInsets.all(16.0),
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: HeaderSection(
-          manager: _tempManager,
-          formKey: GlobalKey<FormState>(),
-          isEditing: _isEditing,
-        ),
+    return Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: HeaderSection(
+        manager: _tempManager,
+        formKey: GlobalKey<FormState>(),
+        isEditing: _isEditing,
       ),
     );
   }
