@@ -156,7 +156,7 @@ class _InteractiveTableState extends State<InteractiveTable> {
                       mainAxisSize: MainAxisSize.min, // Important
                       children: [
                         // HEADER
-                        Container(height: 42, width: 25, color: Colors.white),
+                        Container(height: 42, width: 25),
 
                         // ROWS - NO SCROLL VIEW
                         ...widget.manager.data.tableRows.asMap().entries.map((

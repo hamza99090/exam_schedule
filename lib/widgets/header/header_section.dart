@@ -307,77 +307,54 @@ class _HeaderSectionState extends State<HeaderSection> {
       elevation: 4,
       child: Padding(
         padding: const EdgeInsets.all(20.0),
-        child: Row(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ✅ IMAGE UPLOAD SECTION (LEFT)
-            Column(
+            // ✅ SCHOOL INFORMATION - TOP/START
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                GestureDetector(
-                  onTap: widget.isEditing ? _showImagePickerOptions : null,
-                  child: CircleAvatar(
-                    radius: 25,
-                    backgroundColor: Colors.grey.shade200,
-                    backgroundImage:
-                        (_imagePath != null && _imagePath!.isNotEmpty)
-                        ? FileImage(File(_imagePath!)) as ImageProvider
-                        : null,
-                    child: (_imagePath == null || _imagePath!.isEmpty)
-                        ? Icon(
-                            Icons.add_photo_alternate_sharp,
-                            size: 48,
-                            color: Colors.grey.shade600,
-                          )
-                        : null,
+                Text(
+                  'School Information',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue.shade800,
                   ),
                 ),
-                const SizedBox(height: 8),
                 if (widget.isEditing)
-                  Text(
-                    'Tap to upload',
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  IconButton(
+                    onPressed: _showHeaderInfoDialog,
+                    icon: const Icon(Icons.edit),
+                    color: Colors.blue.shade700,
                   ),
               ],
             ),
 
-            const SizedBox(width: 20),
+            const SizedBox(height: 20),
 
-            // ✅ HEADER INFORMATION CARD (RIGHT) - EXPANDED
-            Expanded(
-              child: Column(
+            // ✅ SCHOOL NAME - TAPPABLE
+            GestureDetector(
+              onTap: widget.isEditing ? _showHeaderInfoDialog : null,
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'School Information',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue.shade800,
+                  Icon(Icons.school, size: 18, color: Colors.grey.shade600),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'School Name',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                      ),
-                      if (widget.isEditing)
-                        IconButton(
-                          onPressed: _showHeaderInfoDialog,
-                          icon: const Icon(Icons.edit),
-                          color: Colors.blue.shade700,
-                          tooltip: 'Edit Header Info',
-                        ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // School Name Display
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(Icons.school, size: 18, color: Colors.grey.shade600),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
+                        SizedBox(height: 2),
+                        Text(
                           _schoolNameController.text.isNotEmpty
                               ? _schoolNameController.text
                               : 'No school name entered',
@@ -389,24 +366,41 @@ class _HeaderSectionState extends State<HeaderSection> {
                                 : Colors.grey.shade500,
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
+                ],
+              ),
+            ),
 
-                  const SizedBox(height: 12),
+            const SizedBox(height: 16),
 
-                  // Exam Description Display
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(
-                        Icons.description,
-                        size: 18,
-                        color: Colors.grey.shade600,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
+            // ✅ EXAM DESCRIPTION - TAPPABLE
+            GestureDetector(
+              onTap: widget.isEditing ? _showHeaderInfoDialog : null,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.description,
+                    size: 18,
+                    color: Colors.grey.shade600,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Exam Description',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
                           _examDescController.text.isNotEmpty
                               ? _examDescController.text
                               : 'No exam description entered',
@@ -417,24 +411,67 @@ class _HeaderSectionState extends State<HeaderSection> {
                                 : Colors.grey.shade500,
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-
-                  if (!widget.isEditing) ...[
-                    const SizedBox(height: 12),
-                    Text(
-                      'Read-only mode',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade500,
-                        fontStyle: FontStyle.italic,
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
                 ],
               ),
             ),
+
+            const SizedBox(height: 30),
+
+            // ✅ IMAGE PICKER - BOTTOM
+            Column(
+              children: [
+                Text(
+                  'Upload Logo',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.blue.shade800,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Center(
+                  child: GestureDetector(
+                    onTap: widget.isEditing ? _showImagePickerOptions : null,
+                    child: CircleAvatar(
+                      radius: 40,
+                      backgroundColor: Colors.grey.shade200,
+                      backgroundImage:
+                          (_imagePath != null && _imagePath!.isNotEmpty)
+                          ? FileImage(File(_imagePath!)) as ImageProvider
+                          : null,
+                      child: (_imagePath == null || _imagePath!.isEmpty)
+                          ? Icon(
+                              Icons.add_photo_alternate_sharp,
+                              size: 48,
+                              color: Colors.grey.shade600,
+                            )
+                          : null,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                if (widget.isEditing)
+                  Text(
+                    'Tap to upload logo',
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  ),
+              ],
+            ),
+
+            if (!widget.isEditing) ...[
+              const SizedBox(height: 12),
+              Text(
+                'Read-only mode',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey.shade500,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
           ],
         ),
       ),
