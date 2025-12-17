@@ -38,6 +38,8 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
   bool _hasAutoDownloaded = false; // Track if auto-download already happened
   // ADD THESE IMAGE PICKER METHODS:
   final ImagePicker _picker = ImagePicker();
+  // ADD THIS SCROLL CONTROLLER
+  final ScrollController _scrollController = ScrollController();
 
   Future<void> _pickFromGallery() async {
     try {
@@ -117,6 +119,30 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
     if (widget.openInEditMode) {
       _isEditing = true;
     }
+  }
+
+  // ADD THIS METHOD
+  void _addNewRowAndScroll() {
+    // Use tempManager to add new row
+    _tempManager.addNewRow();
+
+    // Scroll to bottom after a short delay to allow the UI to update
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    // DISPOSE THE SCROLL CONTROLLER
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -282,9 +308,9 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
     });
   }
 
+  // UPDATE THIS METHOD - REPLACE _addNewRow()
   void _addNewRow() {
-    // Use tempManager instead of directly manipulating data
-    _tempManager.addNewRow();
+    _addNewRowAndScroll();
   }
 
   String _formatDate(DateTime date) {
@@ -771,6 +797,7 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
         ],
       ),
       body: SingleChildScrollView(
+        controller: _scrollController, // ADD CONTROLLER HERE
         child: Column(
           children: [
             _buildHeaderCard(),
@@ -818,18 +845,21 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
     return Padding(
       padding: const EdgeInsets.only(top: 16.0),
       child: Container(
+        constraints: const BoxConstraints(
+          minWidth: 250, // Minimum width force karein
+        ),
         decoration: BoxDecoration(
           color: Colors.blue.shade700,
           borderRadius: BorderRadius.circular(12),
         ),
         child: ElevatedButton.icon(
-          onPressed: _addNewRow,
+          onPressed: _addNewRowAndScroll,
           icon: const Icon(Icons.add),
           label: const Text('Add New Row'),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.transparent,
             foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 120),
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 100),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),

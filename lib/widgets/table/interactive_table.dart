@@ -135,42 +135,140 @@ class _InteractiveTableState extends State<InteractiveTable> {
   @override
   Widget build(BuildContext context) {
     if (widget.manager.data.tableRows.isEmpty) {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
 
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ✅ FIXED ACTION COLUMN (LEFT SIDE - DOESN'T SCROLL)
-                // ✅ SIMPLE WORKING VERSION
-                if (widget.isEditing)
-                  Container(
-                    width: 25,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min, // Important
-                      children: [
-                        // HEADER
-                        Container(height: 42, width: 25),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ✅ TABLE CARD (SIRF TABLE)
+            Expanded(
+              child: Card(
+                elevation: 4,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(6, 12, 12, 12),
+                  child: Scrollbar(
+                    controller: _horizontalScrollController,
+                    thumbVisibility: true,
+                    interactive: true,
+                    child: SingleChildScrollView(
+                      controller: _horizontalScrollController,
+                      scrollDirection: Axis.horizontal,
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        child: DataTable(
+                          headingTextStyle: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                            fontSize: 12,
+                          ),
+                          headingRowColor: MaterialStateProperty.all(
+                            Colors.blue.shade700,
+                          ),
+                          headingRowHeight: 42,
+                          dataRowMinHeight: 42,
+                          dataRowMaxHeight: 52,
+                          columnSpacing: 14,
+                          horizontalMargin: 6,
+                          columns: [
+                            const DataColumn(label: Text('Date')),
+                            const DataColumn(label: Text('Day')),
+                            ...widget.manager.data.classNames
+                                .asMap()
+                                .entries
+                                .map(
+                                  (e) => DataColumn(
+                                    label: SizedBox(
+                                      width: 100,
+                                      child: _buildClassNameEditor(
+                                        e.key,
+                                        e.value,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                          ],
+                          rows: widget.manager.data.tableRows
+                              .asMap()
+                              .entries
+                              .map((e) {
+                                final index = e.key;
+                                final rowData = e.value;
+                                return DataRow(
+                                  cells: [
+                                    _buildDateCell(index, rowData),
+                                    _buildDayCell(index, rowData),
+                                    ..._buildClassCells(index, rowData),
+                                  ],
+                                );
+                              })
+                              .toList(),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
 
-                        // ROWS - NO SCROLL VIEW
-                        ...widget.manager.data.tableRows.asMap().entries.map((
-                          e,
-                        ) {
-                          final index = e.key;
-                          return SizedBox(
-                            height: 52,
-                            width: 25,
+            const SizedBox(width: 8),
+
+            // ✅ ACTION BUTTONS — SAME HEIGHT AS TABLE CARD
+            if (widget.isEditing)
+              Container(
+                width: 45,
+                padding: const EdgeInsets.only(top: 17), // TOP PADDING ADDED
+                child: Column(
+                  children: [
+                    // Blue header (matches table header height)
+                    Container(
+                      height: 42,
+                      decoration: BoxDecoration(
+                        // color: Colors.blue.shade700,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(4),
+                          topRight: Radius.circular(4),
+                        ),
+                      ),
+                    ),
+
+                    // Buttons for each row
+                    ...widget.manager.data.tableRows.asMap().entries.map((e) {
+                      final index = e.key;
+
+                      return Container(
+                        height: 52,
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(
+                              color: Colors.grey.shade200,
+                              width: 1,
+                            ),
+                          ),
+                        ),
+                        child: Center(
+                          child: Container(
+                            width: 35,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade700,
+                              borderRadius: BorderRadius.circular(6),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.25),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 5),
+                                  spreadRadius: 1,
+                                ),
+                              ],
+                            ),
                             child: PopupMenuButton<String>(
                               padding: EdgeInsets.zero,
-                              icon: Icon(
+                              icon: const Icon(
                                 Icons.more_vert,
-                                color: Colors.blue.shade700,
+                                color: Colors.white,
                                 size: 20,
                               ),
                               onSelected: (value) {
@@ -180,14 +278,14 @@ class _InteractiveTableState extends State<InteractiveTable> {
                                   _showDeleteConfirmation(index);
                                 }
                               },
-                              itemBuilder: (context) => [
+                              itemBuilder: (context) => const [
                                 PopupMenuItem(
                                   value: 'reset',
                                   child: Row(
                                     children: [
                                       Icon(
                                         Icons.restart_alt,
-                                        color: Colors.blue,
+                                        color: Colors.green,
                                       ),
                                       SizedBox(width: 8),
                                       Text('Reset'),
@@ -209,132 +307,16 @@ class _InteractiveTableState extends State<InteractiveTable> {
                                 ),
                               ],
                             ),
-                          );
-                        }).toList(),
-                      ],
-                    ),
-                  ),
-
-                // ✅ SCROLLABLE TABLE (WITHOUT ACTION COLUMN)
-                Expanded(
-                  child: Scrollbar(
-                    controller: _horizontalScrollController,
-                    thumbVisibility: true,
-                    interactive: true,
-                    child: SingleChildScrollView(
-                      controller: _horizontalScrollController,
-                      scrollDirection: Axis.horizontal,
-                      child: Container(
-                        margin: const EdgeInsets.only(
-                          bottom: 10.0,
-                          right: 14.0,
+                          ),
                         ),
-                        child: DataTable(
-                          headingTextStyle: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                            fontSize: 12,
-                          ),
-                          headingRowColor: MaterialStateProperty.all(
-                            Colors.blue.shade600,
-                          ),
-                          headingRowHeight: 42,
-                          dataTextStyle: TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey.shade800,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          columnSpacing: 14,
-                          dataRowMinHeight: 42,
-                          dataRowMaxHeight: 52,
-                          horizontalMargin: 10,
-                          dividerThickness: 0.3,
-                          border: TableBorder(
-                            horizontalInside: BorderSide(
-                              color: Colors.grey.shade200,
-                              width: 0.3,
-                            ),
-                            verticalInside: BorderSide(
-                              color: Colors.grey.shade200,
-                              width: 0.3,
-                            ),
-                          ),
-                          // ✅ DATA TABLE SE ACTION COLUMN HATA DO
-                          columns: [
-                            // SIRF DATE COLUMN
-                            DataColumn(
-                              label: SizedBox(
-                                width: 80,
-                                child: Text(
-                                  'Date',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                  ),
-                                  textAlign: TextAlign.left,
-                                ),
-                              ),
-                            ),
-                            // DAY COLUMN
-                            DataColumn(
-                              label: SizedBox(
-                                width: 60,
-                                child: Text(
-                                  'Day',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                  ),
-                                  textAlign: TextAlign.left,
-                                ),
-                              ),
-                            ),
-                            // CLASS COLUMNS
-                            ...widget.manager.data.classNames
-                                .asMap()
-                                .entries
-                                .map((e) {
-                                  final index = e.key;
-                                  return DataColumn(
-                                    label: SizedBox(
-                                      width: 100,
-                                      child: _buildClassNameEditor(
-                                        index,
-                                        e.value,
-                                      ),
-                                    ),
-                                  );
-                                })
-                                .toList(),
-                          ],
-                          rows: widget.manager.data.tableRows
-                              .asMap()
-                              .entries
-                              .map((e) {
-                                final index = e.key;
-                                final rowData = e.value;
-                                return DataRow(
-                                  cells: [
-                                    // ✅ SIRF DATE, DAY, CLASSES - NO ACTION CELL
-                                    _buildDateCell(index, rowData),
-                                    _buildDayCell(index, rowData),
-                                    ..._buildClassCells(index, rowData),
-                                  ],
-                                );
-                              })
-                              .toList(),
-                        ),
-                      ),
-                    ),
-                  ),
+                      );
+                    }).toList(),
+                  ],
                 ),
-              ],
-            );
-          },
-        ),
-      ),
+              ),
+          ],
+        );
+      },
     );
   }
 
