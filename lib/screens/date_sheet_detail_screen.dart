@@ -8,6 +8,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:share_plus/share_plus.dart';
 import 'package:exam_schedule/models/table_row_model.dart';
 import 'package:flutter/material.dart';
+import 'package:exam_schedule/services/rate_us_dialog.dart';
 import '../managers/date_sheet_manager.dart';
 import '../models/date_sheet_model.dart';
 import '../widgets/header/header_section.dart';
@@ -379,6 +380,13 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
       );
 
       print('✅ PDF shared successfully from: ${tempFile.path}');
+
+      // After successful PDF generation/sharing, show the Rate Us dialog
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (context) => const RateUsDialog(),
+      );
     } catch (e) {
       print('Error saving/sharing PDF: $e');
       ScaffoldMessenger.of(context).showSnackBar(
