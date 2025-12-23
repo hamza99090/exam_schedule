@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../managers/date_sheet_manager.dart';
 
 class HeaderSection extends StatefulWidget {
@@ -67,14 +68,22 @@ class _HeaderSectionState extends State<HeaderSection> {
 
   Future<void> _pickFromGallery() async {
     try {
-      final XFile? picked = await _picker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 1200,
-        maxHeight: 1200,
-        imageQuality: 85,
-      );
-      if (picked != null) {
-        widget.manager.updateLogoPath(picked.path);
+      // ✅ Android 13+ ke liye permission check (Photos permission)
+      if (await Permission.photos.request().isGranted) {
+        final XFile? picked = await _picker.pickImage(
+          source: ImageSource.gallery,
+          maxWidth: 1200,
+          maxHeight: 1200,
+          imageQuality: 85,
+        );
+        if (picked != null) {
+          widget.manager.updateLogoPath(picked.path);
+        }
+      } else {
+        // Permission nahi mila to user ko bataein
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gallery access permission required')),
+        );
       }
     } catch (e) {
       debugPrint('Gallery pick error: $e');
@@ -83,14 +92,22 @@ class _HeaderSectionState extends State<HeaderSection> {
 
   Future<void> _pickFromCamera() async {
     try {
-      final XFile? picked = await _picker.pickImage(
-        source: ImageSource.camera,
-        maxWidth: 1200,
-        maxHeight: 1200,
-        imageQuality: 85,
-      );
-      if (picked != null) {
-        widget.manager.updateLogoPath(picked.path);
+      // ✅ Camera permission check
+      if (await Permission.camera.request().isGranted) {
+        final XFile? picked = await _picker.pickImage(
+          source: ImageSource.camera,
+          maxWidth: 1200,
+          maxHeight: 1200,
+          imageQuality: 85,
+        );
+        if (picked != null) {
+          widget.manager.updateLogoPath(picked.path);
+        }
+      } else {
+        // Permission nahi mila to user ko bataein
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Camera permission required')));
       }
     } catch (e) {
       debugPrint('Camera pick error: $e');

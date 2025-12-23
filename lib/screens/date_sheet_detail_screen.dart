@@ -42,68 +42,6 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
   // ADD THIS SCROLL CONTROLLER
   final ScrollController _scrollController = ScrollController();
 
-  Future<void> _pickFromGallery() async {
-    try {
-      final XFile? picked = await _picker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 1200,
-        maxHeight: 1200,
-        imageQuality: 85,
-      );
-      if (picked != null) {
-        setState(() {
-          _editableDateSheet.logoPath = picked.path;
-          _tempManager.updateLogoPath(picked.path);
-        });
-      }
-    } catch (e) {
-      debugPrint('Gallery pick error: $e');
-    }
-  }
-
-  Future<void> _pickFromCamera() async {
-    try {
-      final XFile? picked = await _picker.pickImage(
-        source: ImageSource.camera,
-        maxWidth: 1200,
-        maxHeight: 1200,
-        imageQuality: 85,
-      );
-      if (picked != null) {
-        setState(() {
-          _editableDateSheet.logoPath = picked.path;
-          _tempManager.updateLogoPath(picked.path);
-        });
-      }
-    } catch (e) {
-      debugPrint('Camera pick error: $e');
-    }
-  }
-
-  void _removeImage() {
-    // Manual object creation
-    final newSheet = DateSheetData(
-      schoolName: _editableDateSheet.schoolName,
-      dateSheetDescription: _editableDateSheet.dateSheetDescription,
-      termDescription: _editableDateSheet.termDescription,
-      tableRows: List.from(
-        _editableDateSheet.tableRows,
-      ), // Important: create new list
-      fileName: _editableDateSheet.fileName,
-      createdAt: _editableDateSheet.createdAt,
-      classNames: List.from(_editableDateSheet.classNames), // Create new list
-      logoPath: null, // ← This is what matters
-    );
-
-    setState(() {
-      _editableDateSheet = newSheet;
-    });
-
-    // Update temp manager
-    _tempManager.data = newSheet;
-    _tempManager.notifyListeners();
-  }
-
   @override
   void initState() {
     super.initState();
@@ -383,10 +321,7 @@ class _DateSheetDetailScreenState extends State<DateSheetDetailScreen> {
 
       // After successful PDF generation/sharing, show the Rate Us dialog
       if (!mounted) return;
-      showDialog(
-        context: context,
-        builder: (context) => const RateUsDialog(),
-      );
+      showDialog(context: context, builder: (context) => const RateUsDialog());
     } catch (e) {
       print('Error saving/sharing PDF: $e');
       ScaffoldMessenger.of(context).showSnackBar(
